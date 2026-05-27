@@ -34,12 +34,12 @@ const Sidebar = ({ role }) => {
   const links = role === 'client' ? clientLinks : workerLinks;
 
   return (
-    <div style={{ width: '250px', backgroundColor: 'var(--card-bg)', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--border-color)' }}>
+    <div className="sidebar">
+      <div className="sidebar-header">
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand-color)' }}>DoThozhil</h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{role === 'client' ? 'Client Portal' : 'Worker Portal'}</p>
       </div>
-      <div style={{ flex: 1, padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div className="sidebar-links">
         {links.map((link) => {
           const isActive = location.pathname.startsWith(link.path);
           return (
@@ -64,7 +64,7 @@ const Sidebar = ({ role }) => {
           );
         })}
       </div>
-      <div style={{ padding: '1.5rem 1rem', borderTop: '1px solid var(--border-color)' }}>
+      <div className="sidebar-footer">
         <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', color: 'var(--danger)', fontWeight: '500', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>
           <LogOut size={20} />
           Sign Out

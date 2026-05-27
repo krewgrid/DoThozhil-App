@@ -109,6 +109,7 @@ const ClientDashboard = () => {
         {loading ? (
           <p>Loading recent works...</p>
         ) : (
+          <div className="table-responsive">
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
@@ -182,6 +183,7 @@ const ClientDashboard = () => {
               )}
             </tbody>
           </table>
+        </div>
         )}
       </div>
     </div>

@@ -86,16 +86,16 @@ const GetWork = () => {
          </div>
       )}
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 250px', position: 'relative' }}>
           <Search size={20} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input type="text" className="input-field" placeholder="Search by Work Name..." style={{ paddingLeft: '2.5rem' }} />
         </div>
-        <div style={{ width: '250px', position: 'relative' }}>
+        <div style={{ flex: '1 1 200px', position: 'relative' }}>
           <MapPin size={20} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
           <input type="text" className="input-field" placeholder="Location Filter" style={{ paddingLeft: '2.5rem' }} value={filterLocation} onChange={e => setFilterLocation(e.target.value)} />
         </div>
-        <div style={{ width: '200px' }}>
+        <div style={{ flex: '1 1 150px' }}>
           <select className="input-field" value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ cursor: 'pointer' }}>
             <option value="date">Sort: Nearest Date</option>
             <option value="pay">Sort: Highest Pay</option>
@@ -113,7 +113,7 @@ const GetWork = () => {
       {loading ? (
         <p>Loading available works...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
           {sortedWorks.length > 0 ? sortedWorks.map(work => (
             <div className="card" key={work.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>

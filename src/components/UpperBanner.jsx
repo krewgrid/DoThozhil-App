@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { User, Ticket } from 'lucide-react';
+import { User, Ticket, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const UpperBanner = ({ role }) => {
   const [username, setUsername] = useState('');
   const [slotsLeft, setSlotsLeft] = useState(10);
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('dothozhil_username');
+    localStorage.removeItem('dothozhil_role');
+    navigate('/login');
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('dothozhil_username');
@@ -32,8 +41,8 @@ const UpperBanner = ({ role }) => {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)', padding: '1rem 2rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+    <div className="upper-banner">
+      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         {username && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', paddingRight: '1rem', borderRight: '1px solid var(--border-color)' }}>
             <User size={18} color="var(--brand-color)" />
@@ -50,6 +59,10 @@ const UpperBanner = ({ role }) => {
         {role === 'worker' && (
           <button className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite & Earn Slots</button>
         )}
+        <button className="mobile-signout" onClick={handleSignOut}>
+          <LogOut size={18} />
+          Sign Out
+        </button>
       </div>
     </div>
   );
