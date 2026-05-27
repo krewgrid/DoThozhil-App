@@ -8,18 +8,34 @@ const Signup = () => {
   const type = searchParams.get('type') || 'worker';
 
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  const [rawUsername, setRawUsername] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState(''); // 'checking', 'available', 'taken'
+  const [referralCode, setReferralCode] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleEmailChange = (e) => {
-    const val = e.target.value;
-    setEmail(val);
-    // Auto-fill username with the part before @
-    const extractedUsername = val.split('@')[0];
-    setUsername(extractedUsername);
-  };
+  React.useEffect(() => {
+    const checkUsername = async () => {
+      if (!rawUsername.trim()) {
+        setUsernameStatus('');
+        return;
+      }
+      setUsernameStatus('checking');
+      const finalUsername = (type === 'client' ? 'c_' : 'w_') + rawUsername.trim().toLowerCase();
+      
+      const { data, error } = await supabase.rpc('check_username_available', { p_username: finalUsername });
+      
+      if (error) {
+        setUsernameStatus('');
+      } else {
+        setUsernameStatus(data ? 'available' : 'taken');
+      }
+    };
+    
+    const timeoutId = setTimeout(checkUsername, 500);
+    return () => clearTimeout(timeoutId);
+  }, [rawUsername, type]);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -32,13 +48,24 @@ const Signup = () => {
     setLoading(true);
     setErrorMsg('');
     
+    if (usernameStatus === 'taken') {
+      setErrorMsg("That username is already taken. Please choose another.");
+      setLoading(false);
+      return;
+    }
+
+    const finalUsername = (type === 'client' ? 'c_' : 'w_') + rawUsername.trim().toLowerCase();
+    const myRefCode = type.toUpperCase().charAt(0) + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          username: username,
-          role: type
+          username: finalUsername,
+          role: type,
+          referral_code_used: referralCode || null,
+          my_referral_code: myRefCode
         }
       }
     });
@@ -49,7 +76,7 @@ const Signup = () => {
       return;
     }
     
-    localStorage.setItem('dothozhil_username', username);
+    localStorage.setItem('dothozhil_username', finalUsername);
     localStorage.setItem('dothozhil_role', type);
     
     if (type === 'client') {
@@ -74,12 +101,35 @@ const Signup = () => {
           )}
           <div style={{ marginBottom: '1rem' }}>
             <label className="label">Email Address</label>
-            <input type="email" value={email} onChange={handleEmailChange} className="input-field" placeholder="example@gmail.com" required />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="example@gmail.com" required />
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label className="label">Username (Auto-generated)</label>
-            <input type="text" value={username} className="input-field" placeholder="Auto-fills from email" disabled style={{ backgroundColor: '#f9fafb', cursor: 'not-allowed' }} />
+            <label className="label">Username</label>
+            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '0.5rem', overflow: 'hidden', backgroundColor: 'var(--card-bg)' }}>
+              <span style={{ padding: '0.75rem', backgroundColor: '#f3f4f6', color: '#6b7280', borderRight: '1px solid var(--border-color)', fontWeight: '600' }}>
+                {type === 'client' ? 'c_' : 'w_'}
+              </span>
+              <input 
+                type="text" 
+                value={rawUsername} 
+                onChange={e => setRawUsername(e.target.value)} 
+                className="input-field" 
+                style={{ border: 'none', borderRadius: 0 }} 
+                placeholder="Choose a unique username" 
+                required 
+              />
+            </div>
+            {usernameStatus === 'checking' && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Checking availability...</p>}
+            {usernameStatus === 'available' && <p style={{ fontSize: '0.8rem', color: 'var(--success)', marginTop: '0.25rem' }}>✓ Username is available</p>}
+            {usernameStatus === 'taken' && <p style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: '0.25rem' }}>✗ Username is taken</p>}
           </div>
+
+          {type === 'worker' && (
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="label">Referral Code (Optional)</label>
+              <input type="text" value={referralCode} onChange={e => setReferralCode(e.target.value)} className="input-field" placeholder="Enter code if you have one" />
+            </div>
+          )}
           <div style={{ marginBottom: '1rem' }}>
             <label className="label">Contact Number</label>
             <input type="tel" className="input-field" placeholder="Contact Number" required />

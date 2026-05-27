@@ -15,6 +15,16 @@ const UpperBanner = ({ role }) => {
     navigate('/login');
   };
 
+  const handleInvite = async () => {
+    if (!supabase) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && user.user_metadata?.my_referral_code) {
+      alert(`Share this unique code with your friends to earn free slots: ${user.user_metadata.my_referral_code}`);
+    } else {
+      alert("Referral code not found. You might be on an older account.");
+    }
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('dothozhil_username');
     if (storedUser) {
@@ -58,7 +68,7 @@ const UpperBanner = ({ role }) => {
         )}
         <a href="#tnc" style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)' }}>T&C</a>
         {role === 'worker' && (
-          <button className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite & Earn Slots</button>
+          <button onClick={handleInvite} className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite & Earn Slots</button>
         )}
         <button className="mobile-signout" onClick={handleSignOut}>
           <LogOut size={18} />

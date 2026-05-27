@@ -23,10 +23,20 @@ const GetWork = () => {
   const fetchMySlots = async () => {
     if (!supabase) return;
     const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
-    const { data, error } = await supabase.from('work_assignments').select('slots_consumed').eq('worker_id', workerId);
-    if (!error && data) {
-      const consumed = data.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
+    
+    // Fetch slots consumed
+    const { data: slotData, error: slotError } = await supabase.from('work_assignments').select('slots_consumed, work_id').eq('worker_id', workerId);
+    
+    if (!slotError && slotData) {
+      const consumed = slotData.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
       setMySlots(Math.max(0, 10 - consumed));
+
+      // Also populate joinedWorks state so the UI knows what we already joined!
+      const joinedObj = {};
+      slotData.forEach(row => {
+        joinedObj[row.work_id] = true;
+      });
+      setJoinedWorks(joinedObj);
     }
   };
 

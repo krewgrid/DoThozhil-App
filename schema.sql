@@ -97,3 +97,21 @@ $$;
 
 -- Force Supabase to refresh its API cache immediately so the function becomes available
 NOTIFY pgrst, 'reload schema';
+
+-- 6. Create RPC function to check username availability
+CREATE OR REPLACE FUNCTION check_username_available(p_username text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_count int;
+BEGIN
+  -- We must check the raw JSON metadata since usernames are stored there
+  SELECT COUNT(*) INTO v_count
+  FROM auth.users
+  WHERE raw_user_meta_data->>'username' = p_username;
+  
+  RETURN v_count = 0;
+END;
+$$;
