@@ -30,13 +30,14 @@ const UpperBanner = ({ role }) => {
   }, [role]);
 
   const fetchWorkerSlots = async (userId) => {
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from('work_assignments')
-      .select('*', { count: 'exact', head: true })
+      .select('slots_consumed')
       .eq('worker_id', userId);
     
-    if (!error && count !== null) {
-      setSlotsLeft(Math.max(0, 10 - count));
+    if (!error && data) {
+      const consumed = data.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
+      setSlotsLeft(Math.max(0, 10 - consumed));
     }
   };
 

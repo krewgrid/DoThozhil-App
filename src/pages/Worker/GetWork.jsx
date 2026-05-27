@@ -9,10 +9,26 @@ const GetWork = () => {
   const [loading, setLoading] = useState(true);
   const [joinedWorks, setJoinedWorks] = useState({});
   const [feedbackMsg, setFeedbackMsg] = useState({ type: '', text: '' });
+  
+  const [mySlots, setMySlots] = useState(10);
+  const [selectedWorkId, setSelectedWorkId] = useState(null);
+  const [slotsToJoin, setSlotsToJoin] = useState(1);
+  const [friendNames, setFriendNames] = useState([]);
 
   useEffect(() => {
     fetchWorks();
+    fetchMySlots();
   }, []);
+
+  const fetchMySlots = async () => {
+    if (!supabase) return;
+    const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    const { data, error } = await supabase.from('work_assignments').select('slots_consumed').eq('worker_id', workerId);
+    if (!error && data) {
+      const consumed = data.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
+      setMySlots(Math.max(0, 10 - consumed));
+    }
+  };
 
   const fetchWorks = async () => {
     if (!supabase) {
@@ -34,20 +50,39 @@ const GetWork = () => {
     setLoading(false);
   };
 
-  const handleJoin = async (workId) => {
+  const handleJoinInit = (workId) => {
+    setSelectedWorkId(workId);
+    setSlotsToJoin(1);
+    setFriendNames([]);
+  };
+
+  const handleFriendNameChange = (index, value) => {
+    const newNames = [...friendNames];
+    newNames[index] = value;
+    setFriendNames(newNames);
+  };
+
+  const handleJoinConfirm = async (workId) => {
     if (!supabase) {
       setFeedbackMsg({ type: 'error', text: "Cannot join: Backend is disconnected." });
       return;
     }
 
-    const isConfirmed = window.confirm("Are you sure you want to join this work? This will consume 1 slot.");
-    if (!isConfirmed) return;
+    // Validate friend names
+    const requiredFriends = slotsToJoin - 1;
+    const validFriends = friendNames.slice(0, requiredFriends).filter(n => n && n.trim() !== '');
+    if (validFriends.length < requiredFriends) {
+      alert("Please enter names for all your friends!");
+      return;
+    }
 
     const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
 
-    const { data, error } = await supabase.rpc('join_work', {
+    const { data, error } = await supabase.rpc('join_work_with_friends', {
       p_work_id: workId,
-      p_worker_id: workerId
+      p_worker_id: workerId,
+      p_slots: slotsToJoin,
+      p_friend_names: validFriends
     });
 
     if (error) {
@@ -56,12 +91,11 @@ const GetWork = () => {
     }
 
     if (data === true) {
-      setFeedbackMsg({ type: 'success', text: "You have joined the work! 1 slot consumed. A WhatsApp link will be sent shortly." });
-      // Mark as joined locally
+      setFeedbackMsg({ type: 'success', text: `You have joined the work for ${slotsToJoin} slots! A WhatsApp link will be sent shortly.` });
       setJoinedWorks(prev => ({ ...prev, [workId]: true }));
-      // Refresh the works list to show the new slot count
+      setSelectedWorkId(null);
       fetchWorks();
-      // Notify the UpperBanner to update its slot count
+      fetchMySlots();
       window.dispatchEvent(new CustomEvent('slotConsumed'));
     } else {
       setFeedbackMsg({ type: 'error', text: "Failed to join. Either the slots are full or you have already joined this work." });
@@ -145,9 +179,50 @@ const GetWork = () => {
                 <button className="btn-outline" style={{ width: '100%', borderColor: 'var(--success)', color: 'var(--success)' }} disabled>
                   ✓ Joined
                 </button>
+              ) : selectedWorkId === work.id ? (
+                <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+                  <label className="label">How many slots do you need?</label>
+                  <select 
+                    className="input-field" 
+                    value={slotsToJoin} 
+                    onChange={e => setSlotsToJoin(Number(e.target.value))}
+                    style={{ marginBottom: '1rem', cursor: 'pointer' }}
+                  >
+                    {[...Array(Math.min(work.available_slots, mySlots))].map((_, i) => (
+                      <option key={i+1} value={i+1}>{i+1} Slot{i > 0 ? 's' : ''}</option>
+                    ))}
+                  </select>
+                  
+                  {slotsToJoin > 1 && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Enter your friends' names:</p>
+                      {[...Array(slotsToJoin - 1)].map((_, i) => (
+                        <input 
+                          key={i}
+                          type="text" 
+                          className="input-field" 
+                          placeholder={`Friend ${i + 1} Name`} 
+                          style={{ marginBottom: '0.5rem', padding: '0.5rem 0.75rem' }}
+                          value={friendNames[i] || ''}
+                          onChange={(e) => handleFriendNameChange(i, e.target.value)}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button onClick={() => setSelectedWorkId(null)} className="btn-outline" style={{ flex: 1 }}>Cancel</button>
+                    <button onClick={() => handleJoinConfirm(work.id)} className="btn-primary" style={{ flex: 1 }}>Confirm Join</button>
+                  </div>
+                </div>
               ) : (
-                <button onClick={() => handleJoin(work.id)} className="btn-primary" style={{ width: '100%' }} disabled={work.available_slots <= 0}>
-                  {work.available_slots > 0 ? 'Join Work (Consumes 1 Slot)' : 'Slots Full'}
+                <button 
+                  onClick={() => handleJoinInit(work.id)} 
+                  className="btn-primary" 
+                  style={{ width: '100%' }} 
+                  disabled={work.available_slots <= 0 || mySlots <= 0}
+                >
+                  {work.available_slots > 0 ? (mySlots > 0 ? 'Join Work' : 'No Personal Slots Left') : 'Work Slots Full'}
                 </button>
               )}
             </div>

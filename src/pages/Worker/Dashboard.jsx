@@ -29,15 +29,19 @@ const WorkerDashboard = () => {
     if (assignmentsError) {
       console.error("Error fetching worker assignments", assignmentsError);
     } else {
-      // The joined data is in assignments[i].works
-      const joinedWorks = assignments ? assignments.map(a => a.works) : [];
+      // The joined data is in assignments[i].works, add slot data directly to it
+      const joinedWorks = assignments ? assignments.map(a => ({
+        ...a.works,
+        slots_consumed: a.slots_consumed || 1,
+        friend_names: a.friend_names || []
+      })) : [];
       setWorks(joinedWorks);
     }
     setLoading(false);
   };
 
-  const totalEarnings = works.reduce((sum, work) => sum + (work ? work.payment_amount : 0), 0);
-  const worksCompleted = works.length; // For simplicity, assuming all are completed or joined
+  const totalEarnings = works.reduce((sum, work) => sum + (work ? work.payment_amount * work.slots_consumed : 0), 0);
+  const worksCompleted = works.reduce((sum, work) => sum + (work ? work.slots_consumed : 0), 0);
   const availableSlots = Math.max(0, 10 - worksCompleted); // Start with 10 free slots
 
   return (
@@ -117,10 +121,19 @@ const WorkerDashboard = () => {
             <tbody>
               {works.length > 0 ? (statusFilter === 'All' ? works : works.filter(w => w.status === statusFilter)).map((work, index) => work && (
                 <tr key={work.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={{ padding: '1rem 0', fontWeight: '500' }}>{work.work_name}</td>
+                  <td style={{ padding: '1rem 0', fontWeight: '500' }}>
+                    {work.work_name}
+                    {work.slots_consumed > 1 && (
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: 'normal' }}>
+                        + {work.slots_consumed - 1} Friends ({work.friend_names.join(', ')})
+                      </div>
+                    )}
+                  </td>
                   <td>{work.date_of_work}</td>
                   <td>{work.reporting_time} - {work.completion_time}</td>
-                  <td style={{ fontWeight: '600', color: 'var(--brand-color-hover)' }}>₹{work.payment_amount}</td>
+                  <td style={{ fontWeight: '600', color: 'var(--brand-color-hover)' }}>
+                    ₹{work.payment_amount * work.slots_consumed}
+                  </td>
                   <td>
                     <span 
                       onClick={() => setStatusFilter(work.status)}
@@ -132,7 +145,7 @@ const WorkerDashboard = () => {
                       fontSize: '0.85rem',
                       cursor: 'pointer'
                     }}>
-                      Joined ({work.status})
+                      Joined ({work.slots_consumed} Slots)
                     </span>
                   </td>
                 </tr>
