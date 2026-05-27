@@ -115,3 +115,21 @@ BEGIN
   RETURN v_count = 0;
 END;
 $$;
+
+-- 7. Create RPC function to check phone/whatsapp availability
+CREATE OR REPLACE FUNCTION check_phone_whatsapp_available(p_phone text, p_whatsapp text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_count int;
+BEGIN
+  SELECT COUNT(*) INTO v_count
+  FROM auth.users
+  WHERE raw_user_meta_data->>'contact_number' = p_phone
+     OR raw_user_meta_data->>'whatsapp_number' = p_whatsapp;
+  
+  RETURN v_count = 0;
+END;
+$$;

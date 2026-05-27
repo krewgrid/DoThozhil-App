@@ -40,7 +40,8 @@ const WorkerDashboard = () => {
     setLoading(false);
   };
 
-  const totalEarnings = works.reduce((sum, work) => sum + (work ? work.payment_amount * work.slots_consumed : 0), 0);
+  const creditedEarnings = works.reduce((sum, work) => sum + (work && (work.status === 'Paid' || work.status === 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
+  const pendingEarnings = works.reduce((sum, work) => sum + (work && (work.status !== 'Paid' && work.status !== 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
   const worksCompleted = works.reduce((sum, work) => sum + (work ? work.slots_consumed : 0), 0);
   const availableSlots = Math.max(0, 10 - worksCompleted); // Start with 10 free slots
 
@@ -66,12 +67,21 @@ const WorkerDashboard = () => {
           </div>
         </div>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ padding: '1rem', backgroundColor: '#dcfce7', borderRadius: '50%', color: '#166534' }}>
+            <IndianRupee size={24} color="#166534" />
+          </div>
+          <div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Credited Earnings</p>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '700' }}>₹{supabase ? creditedEarnings : '35,000'}</h3>
+          </div>
+        </div>
+        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ padding: '1rem', backgroundColor: '#fef3c7', borderRadius: '50%', color: '#d97706' }}>
             <IndianRupee size={24} color="#d97706" />
           </div>
           <div>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total Earnings</p>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: '700' }}>₹{supabase ? totalEarnings : '35,000'}</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Pending Earnings</p>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '700' }}>₹{supabase ? pendingEarnings : '2,400'}</h3>
           </div>
         </div>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

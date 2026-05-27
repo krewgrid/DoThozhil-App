@@ -11,6 +11,8 @@ const Signup = () => {
   const [rawUsername, setRawUsername] = useState('');
   const [usernameStatus, setUsernameStatus] = useState(''); // 'checking', 'available', 'taken'
   const [referralCode, setReferralCode] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,6 +56,24 @@ const Signup = () => {
       return;
     }
 
+    if (!contactNumber.trim() || !whatsappNumber.trim()) {
+      setErrorMsg("Please provide both Contact and WhatsApp numbers.");
+      setLoading(false);
+      return;
+    }
+
+    // Check phone uniqueness
+    const { data: phoneOk, error: phoneErr } = await supabase.rpc('check_phone_whatsapp_available', {
+      p_phone: contactNumber.trim(),
+      p_whatsapp: whatsappNumber.trim()
+    });
+
+    if (phoneErr || phoneOk === false) {
+      setErrorMsg("This Contact Number or WhatsApp Number is already registered to another account.");
+      setLoading(false);
+      return;
+    }
+
     const finalUsername = (type === 'client' ? 'c_' : 'w_') + rawUsername.trim().toLowerCase();
     const myRefCode = type.toUpperCase().charAt(0) + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -64,6 +84,8 @@ const Signup = () => {
         data: {
           username: finalUsername,
           role: type,
+          contact_number: contactNumber.trim(),
+          whatsapp_number: whatsappNumber.trim(),
           referral_code_used: referralCode || null,
           my_referral_code: myRefCode
         }
@@ -132,11 +154,11 @@ const Signup = () => {
           )}
           <div style={{ marginBottom: '1rem' }}>
             <label className="label">Contact Number</label>
-            <input type="tel" className="input-field" placeholder="Contact Number" required />
+            <input type="tel" value={contactNumber} onChange={e => setContactNumber(e.target.value)} className="input-field" placeholder="Contact Number" required />
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label className="label">WhatsApp Number</label>
-            <input type="tel" className="input-field" placeholder="WhatsApp Number" required />
+            <input type="tel" value={whatsappNumber} onChange={e => setWhatsappNumber(e.target.value)} className="input-field" placeholder="WhatsApp Number" required />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
             <label className="label">Create Password</label>
