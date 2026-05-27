@@ -11,7 +11,7 @@ const Reviews = () => {
         <h2 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem' }}>Pending Reviews</h2>
         
         <div style={{ border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1.5rem', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: '1rem', gap: '0.5rem' }}>
             <div>
               <h3 style={{ fontWeight: '600' }}>Work ID: clientname_00001</h3>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Wedding Catering Event - Oct 24, 2023</p>
@@ -19,7 +19,7 @@ const Reviews = () => {
             <span style={{ fontSize: '0.85rem', color: 'var(--danger)', fontWeight: '500' }}>Expires in 2 days</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               W1
             </div>
