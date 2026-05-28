@@ -11,7 +11,7 @@ const ReportNoShow = () => {
         <h2 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem' }}>Today's Works</h2>
         
         <div style={{ border: '1px solid var(--border-color)', borderRadius: '0.5rem', padding: '1.5rem', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div>
               <h3 style={{ fontWeight: '600' }}>Work ID: clientname_00002</h3>
               <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Warehouse Packing - Today</p>
@@ -27,7 +27,7 @@ const ReportNoShow = () => {
               <p style={{ fontWeight: '500' }}>Worker 2 (Jane Smith)</p>
               <p style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>Mark as No Show? Worker will lose 10 slots.</p>
             </div>
-            <button className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>Report No Show</button>
+            <button onClick={() => alert("Worker has been reported for No Show. They will be penalized.")} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>Report No Show</button>
           </div>
         </div>
       </div>

@@ -29,7 +29,7 @@ const Reviews = () => {
             <div style={{ display: 'flex', gap: '0.2rem' }}>
               {[1,2,3,4,5].map(i => <Star key={i} size={20} color={i <= 4 ? "#fbbf24" : "#e5e7eb"} fill={i <= 4 ? "#fbbf24" : "none"} />)}
             </div>
-            <button className="btn-outline" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
+            <button onClick={() => alert("Review submitted successfully!")} className="btn-outline" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
           </div>
         </div>
       </div>
