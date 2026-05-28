@@ -3,6 +3,8 @@ import { Star, CheckCircle } from 'lucide-react';
 
 const Reviews = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
   return (
     <div className="page-content">
       <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '0.5rem' }}>Review Workers</h1>
@@ -34,9 +36,26 @@ const Reviews = () => {
                 <p style={{ fontWeight: '500' }}>Worker 1 (John Doe)</p>
               </div>
               <div style={{ display: 'flex', gap: '0.2rem' }}>
-                {[1,2,3,4,5].map(i => <Star key={i} size={20} color={i <= 4 ? "#fbbf24" : "#e5e7eb"} fill={i <= 4 ? "#fbbf24" : "none"} />)}
+                {[1,2,3,4,5].map(i => (
+                  <Star 
+                    key={i} 
+                    size={24} 
+                    color={i <= (hover || rating) ? "#fbbf24" : "#e5e7eb"} 
+                    fill={i <= (hover || rating) ? "#fbbf24" : "none"} 
+                    style={{ cursor: 'pointer', transition: 'color 0.2s' }}
+                    onClick={() => setRating(i)}
+                    onMouseEnter={() => setHover(i)}
+                    onMouseLeave={() => setHover(0)}
+                  />
+                ))}
               </div>
-              <button onClick={() => setIsSubmitted(true)} className="btn-outline" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
+              <button onClick={() => {
+                if (rating === 0) {
+                  alert("Please select a star rating first.");
+                  return;
+                }
+                setIsSubmitted(true);
+              }} className="btn-outline" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
             </div>
           )}
         </div>
