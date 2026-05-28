@@ -133,3 +133,27 @@ BEGIN
   RETURN v_count = 0;
 END;
 $$;
+
+-- 8. Create RPC function for client to mark a work as paid
+CREATE OR REPLACE FUNCTION mark_work_paid(p_work_id text, p_client_id text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE works 
+  SET status = 'Paid' 
+  WHERE id = p_work_id AND client_id = p_client_id AND status = 'Active';
+  
+  -- If rows were updated, FOUND is true
+  IF FOUND THEN
+    UPDATE work_assignments
+    SET status = 'Paid'
+    WHERE work_id = p_work_id;
+    
+    RETURN true;
+  ELSE
+    RETURN false;
+  END IF;
+END;
+$$;

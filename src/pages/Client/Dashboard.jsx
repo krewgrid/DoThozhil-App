@@ -34,6 +34,27 @@ const ClientDashboard = () => {
     setLoading(false);
   };
 
+  const handleMarkPaid = async (workId) => {
+    if (!supabase) return;
+    const isConfirmed = window.confirm("Are you sure you want to mark this work as Paid? This will transfer the earnings to the workers' Credited accounts.");
+    if (!isConfirmed) return;
+
+    const clientId = localStorage.getItem('dothozhil_username') || 'guest_client_123';
+
+    const { data, error } = await supabase.rpc('mark_work_paid', {
+      p_work_id: workId,
+      p_client_id: clientId
+    });
+
+    if (error || !data) {
+      alert("Failed to mark work as paid. Please try again.");
+    } else {
+      // Update local state
+      setWorks(prev => prev.map(w => w.id === workId ? { ...w, status: 'Paid' } : w));
+      alert("Work successfully marked as Paid!");
+    }
+  };
+
   // Calculate stats
   const totalWorks = works.length;
   const recentWorks = works.filter(w => {
@@ -129,18 +150,30 @@ const ClientDashboard = () => {
                   <td>{work.work_name}</td>
                   <td>{work.date_of_work}</td>
                   <td>
-                    <span 
-                      onClick={() => setStatusFilter(work.status)}
-                      style={{ 
-                      backgroundColor: work.status === 'Active' ? '#fef9c3' : '#dcfce7', 
-                      color: work.status === 'Active' ? '#854d0e' : '#166534', 
-                      padding: '0.2rem 0.6rem', 
-                      borderRadius: '1rem', 
-                      fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}>
-                      {work.status}
-                    </span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span 
+                        onClick={() => setStatusFilter(work.status)}
+                        style={{ 
+                        backgroundColor: work.status === 'Active' ? '#fef9c3' : '#dcfce7', 
+                        color: work.status === 'Active' ? '#854d0e' : '#166534', 
+                        padding: '0.2rem 0.6rem', 
+                        borderRadius: '1rem', 
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {work.status}
+                      </span>
+                      {work.status === 'Active' && (
+                        <button 
+                          onClick={() => handleMarkPaid(work.id)} 
+                          className="btn-primary" 
+                          style={{ padding: '0.2rem 0.6rem', fontSize: '0.8rem', borderRadius: '1rem' }}
+                        >
+                          Mark Paid
+                        </button>
+                      )}
+                    </div>
                   </td>
                   <td>{work.total_slots - work.available_slots}/{work.total_slots} Confirmed</td>
                 </tr>
