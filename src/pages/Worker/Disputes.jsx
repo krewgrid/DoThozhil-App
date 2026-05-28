@@ -1,7 +1,24 @@
-import React from 'react';
-import { Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { Upload, FileImage, X } from 'lucide-react';
 
 const WorkerDisputes = () => {
+  const [file, setFile] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!file) {
+      alert("Please upload picture proof first.");
+      return;
+    }
+    setSubmitted(true);
+    alert("Dispute submitted successfully! Our team will review your evidence.");
+  };
   return (
     <div className="page-content">
       <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1.5rem' }}>Disputes</h1>
@@ -15,12 +32,43 @@ const WorkerDisputes = () => {
           </div>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginBottom: '1rem' }}><strong>Work:</strong> Warehouse Packing (clientname_00002)</p>
           
-          <div style={{ border: '1px dashed var(--border-color)', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', backgroundColor: '#ffffff', marginBottom: '1rem' }}>
-            <Upload size={32} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
-            <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Upload Picture Proof</p>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>PNG, JPG up to 5MB</p>
-          </div>
-          <button className="btn-primary" style={{ backgroundColor: '#1f2937', color: 'white' }}>Submit Dispute</button>
+          {submitted ? (
+            <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#f0fdf4', borderRadius: '0.5rem', color: '#166534', fontWeight: '500' }}>
+              ✓ Dispute submitted successfully and is under review.
+            </div>
+          ) : (
+            <>
+              <div style={{ border: '1px dashed var(--border-color)', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', backgroundColor: '#ffffff', marginBottom: '1rem', position: 'relative', overflow: 'hidden' }}>
+                <input 
+                  type="file" 
+                  accept="image/png, image/jpeg"
+                  onChange={handleFileChange}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                />
+                {!file ? (
+                  <>
+                    <Upload size={32} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Click or tap to Upload Picture Proof</p>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>PNG, JPG up to 5MB</p>
+                  </>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <FileImage size={32} color="var(--brand-color)" style={{ marginBottom: '1rem' }} />
+                    <p style={{ fontWeight: '600', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{file.name}</p>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); setFile(null); }} 
+                      style={{ background: 'none', border: 'none', color: 'var(--danger)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.2rem', cursor: 'pointer' }}
+                    >
+                      <X size={14} /> Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button onClick={handleSubmit} className="btn-primary" style={{ backgroundColor: '#1f2937', color: 'white', opacity: file ? 1 : 0.6 }} disabled={!file}>
+                Submit Dispute
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
