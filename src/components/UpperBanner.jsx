@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 const UpperBanner = ({ role }) => {
   const [username, setUsername] = useState('');
   const [slotsLeft, setSlotsLeft] = useState(10);
+  const [showTnc, setShowTnc] = useState(false);
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -66,7 +67,7 @@ const UpperBanner = ({ role }) => {
             {slotsLeft} Slots Left
           </div>
         )}
-        <a href="#tnc" style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)' }}>T&C</a>
+        <button onClick={() => setShowTnc(true)} style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>T&C</button>
         {role === 'worker' && (
           <button onClick={handleInvite} className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite & Earn Slots</button>
         )}
@@ -75,6 +76,30 @@ const UpperBanner = ({ role }) => {
           Sign Out
         </button>
       </div>
+
+      {showTnc && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '2rem', maxWidth: '600px', width: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--brand-color)' }}>Terms & Conditions</h2>
+            
+            <div style={{ fontSize: '0.95rem', color: 'var(--text-main)', lineHeight: '1.6', marginBottom: '1.5rem' }}>
+              <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>1. Slot Consumption</h4>
+              <p>When a worker joins a work, it consumes their personal slots. If a worker fails to show up for a confirmed work, they may lose slots as a penalty.</p>
+
+              <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>2. Payments</h4>
+              <p>All payments are handled between the Client and the Worker. DoThozhil acts purely as a matching platform. Earnings will remain "Pending" until the Client confirms the payment has been made.</p>
+
+              <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>3. Professional Conduct</h4>
+              <p>Both Clients and Workers must maintain professional behavior. Any harassment, fraud, or misuse of the platform will result in permanent account suspension.</p>
+              
+              <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>4. Multi-Slot Booking</h4>
+              <p>Workers may book multiple slots to bring friends. The primary worker is fully responsible for the conduct and attendance of the friends they bring.</p>
+            </div>
+
+            <button onClick={() => setShowTnc(false)} className="btn-primary" style={{ width: '100%' }}>I Understand & Agree</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
