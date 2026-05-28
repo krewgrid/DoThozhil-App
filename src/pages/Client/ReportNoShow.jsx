@@ -1,7 +1,8 @@
-import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 const ReportNoShow = () => {
+  const [isSubmitted, setIsSubmitted] = useState(false);
   return (
     <div className="page-content">
       <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '0.5rem' }}>Report No Show</h1>
@@ -19,16 +20,23 @@ const ReportNoShow = () => {
             <span style={{ fontSize: '0.85rem', color: 'var(--brand-color)', fontWeight: '600', backgroundColor: '#f0fdf4', padding: '0.2rem 0.6rem', borderRadius: '1rem' }}>Active Today</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fca5a5' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
-              <AlertTriangle size={20} />
+          {isSubmitted ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4', borderRadius: '0.5rem', color: '#166534', fontWeight: '500' }}>
+              <CheckCircle size={20} />
+              Worker has been reported and penalized.
             </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: '500' }}>Worker 2 (Jane Smith)</p>
-              <p style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>Mark as No Show? Worker will lose 10 slots.</p>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fca5a5' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                <AlertTriangle size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: '500' }}>Worker 2 (Jane Smith)</p>
+                <p style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>Mark as No Show? Worker will lose 10 slots.</p>
+              </div>
+              <button onClick={() => setIsSubmitted(true)} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>Report No Show</button>
             </div>
-            <button onClick={() => alert("Worker has been reported for No Show. They will be penalized.")} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>Report No Show</button>
-          </div>
+          )}
         </div>
       </div>
     </div>
