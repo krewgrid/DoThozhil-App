@@ -68,7 +68,13 @@ const Signup = () => {
       p_whatsapp: whatsappNumber.trim()
     });
 
-    if (phoneErr || phoneOk === false) {
+    if (phoneErr) {
+      setErrorMsg("Database Error: " + phoneErr.message);
+      setLoading(false);
+      return;
+    }
+
+    if (phoneOk === false) {
       setErrorMsg("This Contact Number or WhatsApp Number is already registered to another account.");
       setLoading(false);
       return;
