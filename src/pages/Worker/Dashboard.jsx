@@ -6,6 +6,7 @@ const WorkerDashboard = () => {
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
+  const [extraSlots, setExtraSlots] = useState(0);
 
   useEffect(() => {
     fetchWorkerData();
@@ -15,6 +16,12 @@ const WorkerDashboard = () => {
     if (!supabase) {
       setLoading(false);
       return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.user_metadata?.my_referral_code) {
+      const { data: refCount } = await supabase.rpc('get_referral_count', { p_ref_code: user.user_metadata.my_referral_code });
+      if (refCount) setExtraSlots(refCount * 5);
     }
 
     const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
@@ -43,7 +50,7 @@ const WorkerDashboard = () => {
   const creditedEarnings = works.reduce((sum, work) => sum + (work && (work.status === 'Paid' || work.status === 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
   const pendingEarnings = works.reduce((sum, work) => sum + (work && (work.status !== 'Paid' && work.status !== 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
   const worksCompleted = works.reduce((sum, work) => sum + (work ? work.slots_consumed : 0), 0);
-  const availableSlots = Math.max(0, 10 - worksCompleted); // Start with 10 free slots
+  const availableSlots = Math.max(0, (10 + extraSlots) - worksCompleted);
 
   return (
     <div className="page-content">

@@ -157,3 +157,24 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- 9. Create RPC function to count how many users used a specific referral code
+CREATE OR REPLACE FUNCTION get_referral_count(p_ref_code text)
+RETURNS int
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_count int;
+BEGIN
+  IF p_ref_code IS NULL OR p_ref_code = '' THEN
+    RETURN 0;
+  END IF;
+
+  SELECT COUNT(*) INTO v_count
+  FROM auth.users
+  WHERE raw_user_meta_data->>'referral_code_used' = p_ref_code;
+  
+  RETURN v_count;
+END;
+$$;

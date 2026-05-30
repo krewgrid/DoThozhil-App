@@ -41,6 +41,17 @@ const UpperBanner = ({ role }) => {
   }, [role]);
 
   const fetchWorkerSlots = async (userId) => {
+    let extraSlots = 0;
+    
+    // Get the current user's referral code to check if they referred anyone
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.user_metadata?.my_referral_code) {
+      const { data: refCount } = await supabase.rpc('get_referral_count', { p_ref_code: user.user_metadata.my_referral_code });
+      if (refCount) {
+        extraSlots = refCount * 5; // 5 extra slots per referral
+      }
+    }
+
     const { data, error } = await supabase
       .from('work_assignments')
       .select('slots_consumed')
@@ -48,7 +59,7 @@ const UpperBanner = ({ role }) => {
     
     if (!error && data) {
       const consumed = data.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
-      setSlotsLeft(Math.max(0, 10 - consumed));
+      setSlotsLeft(Math.max(0, (10 + extraSlots) - consumed));
     }
   };
 
