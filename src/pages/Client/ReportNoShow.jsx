@@ -1,8 +1,34 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { sendAdminAlert } from '../../lib/webhook';
 
 const ReportNoShow = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmitReport = async () => {
+    setLoading(true);
+    const clientId = localStorage.getItem('dothozhil_username') || 'client_test';
+    const workerId = 'Jane Smith (Worker 2)'; // Hardcoded for prototype
+    const workId = 'clientname_00002';
+
+    if (supabase) {
+      await supabase.from('platform_reports').insert({
+        type: 'NoShow',
+        work_id: workId,
+        reporter_id: clientId,
+        target_id: workerId,
+        description: 'Worker did not show up for the shift.'
+      });
+    }
+
+    // Fire webhook alert
+    await sendAdminAlert('NoShow', workId, clientId, workerId, 'Worker did not show up for the shift.');
+    
+    setIsSubmitted(true);
+    setLoading(false);
+  };
   return (
     <div className="page-content">
       <h1 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '0.5rem' }}>Report No Show</h1>
@@ -34,7 +60,9 @@ const ReportNoShow = () => {
                 <p style={{ fontWeight: '500' }}>Worker 2 (Jane Smith)</p>
                 <p style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>Mark as No Show? Worker will lose 10 slots.</p>
               </div>
-              <button onClick={() => setIsSubmitted(true)} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>Report No Show</button>
+              <button onClick={handleSubmitReport} disabled={loading} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>
+                {loading ? 'Submitting...' : 'Report No Show'}
+              </button>
             </div>
           )}
         </div>

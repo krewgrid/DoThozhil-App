@@ -31,13 +31,17 @@ const Sidebar = ({ role }) => {
     { name: 'Contact Us', path: '/worker/contact', icon: <Headphones size={20} /> },
   ];
 
-  const links = role === 'client' ? clientLinks : workerLinks;
+  const adminLinks = [
+    { name: 'Dashboard', path: '/admin/dashboard', icon: <Home size={20} /> },
+  ];
+
+  const links = role === 'admin' ? adminLinks : role === 'client' ? clientLinks : workerLinks;
 
   return (
     <div className="sidebar">
       <div className="sidebar-header">
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand-color)' }}>DoThozhil</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{role === 'client' ? 'Client Portal' : 'Worker Portal'}</p>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{role === 'admin' ? 'Admin Portal' : role === 'client' ? 'Client Portal' : 'Worker Portal'}</p>
       </div>
       <div className="sidebar-links">
         {links.map((link) => {

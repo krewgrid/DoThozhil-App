@@ -34,7 +34,9 @@ const Login = () => {
     localStorage.setItem('dothozhil_username', storedName);
     localStorage.setItem('dothozhil_role', storedRole);
 
-    if (storedRole === 'client') {
+    if (storedRole === 'admin') {
+      navigate('/admin/dashboard');
+    } else if (storedRole === 'client') {
       navigate('/client/dashboard');
     } else {
       navigate('/worker/dashboard');

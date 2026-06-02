@@ -178,3 +178,23 @@ BEGIN
   RETURN v_count;
 END;
 $$;
+
+-- 10. Create platform_reports table for disputes and no-shows
+CREATE TABLE IF NOT EXISTS platform_reports (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  type text NOT NULL, -- 'NoShow' or 'Dispute'
+  work_id text REFERENCES works(id) ON DELETE CASCADE,
+  reporter_id text NOT NULL,
+  target_id text NOT NULL,
+  description text,
+  proof_url text,
+  status text DEFAULT 'Pending', -- 'Pending', 'Resolved', 'Dismissed'
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE platform_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable read access for all users" ON platform_reports FOR SELECT USING (true);
+CREATE POLICY "Enable insert for all users" ON platform_reports FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update for admins" ON platform_reports FOR UPDATE USING (
+  (SELECT raw_user_meta_data->>'role' FROM auth.users WHERE email = current_user) = 'admin'
+);

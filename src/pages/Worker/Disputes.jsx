@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Upload, FileImage, X } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { sendAdminAlert } from '../../lib/webhook';
 
 const WorkerDisputes = () => {
   const [file, setFile] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -11,13 +14,36 @@ const WorkerDisputes = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) {
       alert("Please upload picture proof first.");
       return;
     }
+    
+    setLoading(true);
+    const workerId = localStorage.getItem('dothozhil_username') || 'worker_test';
+    const clientId = 'clientname_00002'; // Hardcoded for prototype
+    const workId = 'Warehouse Packing';
+
+    if (supabase) {
+      // Create a fake URL for the uploaded file since we don't have storage configured yet
+      const fakeProofUrl = `https://dothozhil.com/proofs/${file.name.replace(/\s+/g, '_')}`;
+      
+      await supabase.from('platform_reports').insert({
+        type: 'Dispute',
+        work_id: workId,
+        reporter_id: workerId,
+        target_id: clientId,
+        description: 'Worker disputes the No-Show mark and has provided picture proof.',
+        proof_url: fakeProofUrl
+      });
+    }
+
+    // Fire webhook alert
+    await sendAdminAlert('Dispute', workId, workerId, clientId, 'Worker disputes No-Show with picture proof.');
+    
     setSubmitted(true);
-    alert("Dispute submitted successfully! Our team will review your evidence.");
+    setLoading(false);
   };
   return (
     <div className="page-content">
@@ -64,8 +90,8 @@ const WorkerDisputes = () => {
                   </div>
                 )}
               </div>
-              <button onClick={handleSubmit} className="btn-primary" style={{ backgroundColor: '#1f2937', color: 'white', opacity: file ? 1 : 0.6 }} disabled={!file}>
-                Submit Dispute
+              <button onClick={handleSubmit} className="btn-primary" style={{ backgroundColor: '#1f2937', color: 'white', opacity: file ? 1 : 0.6 }} disabled={!file || loading}>
+                {loading ? 'Submitting...' : 'Submit Dispute'}
               </button>
             </>
           )}
