@@ -12,12 +12,15 @@ const PostWork = () => {
     reporting_time: '',
     completion_time: '',
     payment_amount: '',
-    payment_date: ''
+    payment_date: '',
+    requires_photo: false,
+    requires_approval: false
   });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setFormData({ ...formData, [e.target.name]: value });
   };
 
   const handleSubmit = async (e) => {
@@ -54,7 +57,9 @@ const PostWork = () => {
           completion_time: formData.completion_time,
           payment_amount: parseInt(formData.payment_amount),
           payment_date: formData.payment_date,
-          status: 'Active'
+          status: 'Active',
+          requires_photo: formData.requires_photo,
+          requires_approval: formData.requires_approval
         }
       ]);
 
@@ -69,7 +74,7 @@ const PostWork = () => {
       setFormData({
         work_name: '', instruction: '', total_slots: '', number_of_days: '', location: '',
         date_of_work: '', reporting_time: '', completion_time: '',
-        payment_amount: '', payment_date: ''
+        payment_amount: '', payment_date: '', requires_photo: false, requires_approval: false
       });
     }
   };
@@ -145,6 +150,26 @@ const PostWork = () => {
                 <label className="label">Payment will Credit on *</label>
                 <input type="date" name="payment_date" min={formData.date_of_work || new Date().toISOString().split('T')[0]} value={formData.payment_date} onChange={handleChange} className="input-field" required />
               </div>
+            </div>
+
+            <div style={{ padding: '1.5rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem', border: '1px solid var(--border-color)', display: 'grid', gap: '1rem' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>Additional Options</h3>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input type="checkbox" name="requires_photo" checked={formData.requires_photo} onChange={handleChange} style={{ width: '1.2rem', height: '1.2rem' }} />
+                <div>
+                  <span style={{ fontWeight: '500', color: 'var(--text-main)' }}>Require Worker Photo</span>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Useful for security or specific roles (e.g. Bodyguard).</p>
+                </div>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input type="checkbox" name="requires_approval" checked={formData.requires_approval} onChange={handleChange} style={{ width: '1.2rem', height: '1.2rem' }} />
+                <div>
+                  <span style={{ fontWeight: '500', color: 'var(--text-main)' }}>Require My Approval</span>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Workers won't be confirmed until you approve them.</p>
+                </div>
+              </label>
             </div>
 
             <div style={{ marginTop: '1rem' }}>

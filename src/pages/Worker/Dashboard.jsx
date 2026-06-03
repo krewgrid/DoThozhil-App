@@ -40,16 +40,17 @@ const WorkerDashboard = () => {
       const joinedWorks = assignments ? assignments.map(a => ({
         ...a.works,
         slots_consumed: a.slots_consumed || 1,
-        friend_names: a.friend_names || []
+        friend_names: a.friend_names || [],
+        assignment_status: a.status
       })) : [];
       setWorks(joinedWorks);
     }
     setLoading(false);
   };
 
-  const creditedEarnings = works.reduce((sum, work) => sum + (work && (work.status === 'Paid' || work.status === 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
-  const pendingEarnings = works.reduce((sum, work) => sum + (work && (work.status !== 'Paid' && work.status !== 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
-  const worksCompleted = works.reduce((sum, work) => sum + (work ? work.slots_consumed : 0), 0);
+  const creditedEarnings = works.reduce((sum, work) => sum + (work && (work.assignment_status === 'Paid' || work.status === 'Completed') ? work.payment_amount * work.slots_consumed : 0), 0);
+  const pendingEarnings = works.reduce((sum, work) => sum + (work && (work.assignment_status === 'Confirmed' || work.assignment_status === 'Pending Approval') ? work.payment_amount * work.slots_consumed : 0), 0);
+  const worksCompleted = works.reduce((sum, work) => sum + (work && work.assignment_status !== 'Declined' && work.assignment_status !== 'Waitlisted' ? work.slots_consumed : 0), 0);
   const availableSlots = Math.max(0, (10 + extraSlots) - worksCompleted);
 
   return (
@@ -153,16 +154,18 @@ const WorkerDashboard = () => {
                   </td>
                   <td>
                     <span 
-                      onClick={() => setStatusFilter(work.status)}
+                      onClick={() => setStatusFilter(work.assignment_status)}
                       style={{ 
-                      backgroundColor: work.status === 'Active' ? '#fef9c3' : '#dcfce7', 
-                      color: work.status === 'Active' ? '#854d0e' : '#166534', 
+                      backgroundColor: work.assignment_status === 'Confirmed' || work.assignment_status === 'Paid' ? '#dcfce7' : 
+                                     work.assignment_status === 'Declined' ? '#fee2e2' : '#fef9c3', 
+                      color: work.assignment_status === 'Confirmed' || work.assignment_status === 'Paid' ? '#166534' : 
+                             work.assignment_status === 'Declined' ? '#991b1b' : '#854d0e', 
                       padding: '0.2rem 0.6rem', 
                       borderRadius: '1rem', 
                       fontSize: '0.85rem',
                       cursor: 'pointer'
                     }}>
-                      Joined ({work.slots_consumed} Slots)
+                      {work.assignment_status} ({work.slots_consumed} Slots)
                     </span>
                   </td>
                 </tr>

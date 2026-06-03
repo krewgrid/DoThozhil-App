@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 
 const ClientDashboard = () => {
   const [works, setWorks] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -31,6 +32,18 @@ const ClientDashboard = () => {
     } else {
       setWorks(data || []);
     }
+
+    const { data: appsData, error: appsError } = await supabase
+      .from('work_assignments')
+      .select('*, works!inner(work_name, client_id)')
+      .eq('works.client_id', clientId)
+      .in('status', ['Pending Approval', 'Waitlisted'])
+      .order('created_at', { ascending: true });
+
+    if (!appsError) {
+      setApplications(appsData || []);
+    }
+
     setLoading(false);
   };
 
@@ -52,6 +65,21 @@ const ClientDashboard = () => {
       // Update local state
       setWorks(prev => prev.map(w => w.id === workId ? { ...w, status: 'Paid' } : w));
       alert("Work successfully marked as Paid!");
+    }
+  };
+
+  const handleApplication = async (assignmentId, action) => {
+    if (!supabase) return;
+    const { data, error } = await supabase.rpc('handle_worker_application', {
+      p_assignment_id: assignmentId,
+      p_action: action
+    });
+
+    if (error) {
+      alert("Error updating application: " + error.message);
+    } else {
+      alert(`Worker successfully ${action}d!`);
+      fetchDashboardData();
     }
   };
 
@@ -116,6 +144,37 @@ const ClientDashboard = () => {
           </div>
         </div>
       </div>
+
+      {applications.length > 0 && (
+        <div className="card" style={{ marginBottom: '2rem', border: '2px solid #fbbf24' }}>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#f59e0b', borderRadius: '50%' }}></span>
+            Pending Actions ({applications.length})
+          </h2>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {applications.map(app => (
+              <div key={app.id} style={{ padding: '1rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', border: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontWeight: '600', marginBottom: '0.2rem' }}>Worker: {app.worker_id}</div>
+                  <div style={{ fontSize: '0.9rem', color: '#92400e' }}>
+                    Applied for: <strong>{app.works.work_name}</strong> ({app.slots_consumed} Slots)
+                  </div>
+                  <div style={{ fontSize: '0.85rem', marginTop: '0.3rem', display: 'flex', gap: '1rem' }}>
+                    <span style={{ backgroundColor: '#fcd34d', padding: '0.1rem 0.5rem', borderRadius: '1rem' }}>Status: {app.status}</span>
+                    {app.worker_photo_url && (
+                      <a href={app.worker_photo_url} target="_blank" rel="noreferrer" style={{ color: '#0284c7', textDecoration: 'underline' }}>View Photo Proof</a>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => handleApplication(app.id, 'Decline')} className="btn-outline" style={{ borderColor: 'var(--error)', color: 'var(--error)', padding: '0.4rem 1rem' }}>Decline</button>
+                  <button onClick={() => handleApplication(app.id, 'Approve')} className="btn-primary" style={{ backgroundColor: 'var(--success)', padding: '0.4rem 1rem' }}>Approve</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

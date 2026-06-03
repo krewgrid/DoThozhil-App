@@ -14,6 +14,7 @@ const GetWork = () => {
   const [selectedWorkId, setSelectedWorkId] = useState(null);
   const [slotsToJoin, setSlotsToJoin] = useState(1);
   const [friendNames, setFriendNames] = useState([]);
+  const [photoFile, setPhotoFile] = useState(null);
 
   useEffect(() => {
     fetchWorks();
@@ -24,8 +25,13 @@ const GetWork = () => {
     if (!supabase) return;
     const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
     
-    // Fetch slots consumed
-    const { data: slotData, error: slotError } = await supabase.from('work_assignments').select('slots_consumed, work_id').eq('worker_id', workerId);
+    // Fetch slots consumed, excluding Waitlisted and Declined
+    const { data: slotData, error: slotError } = await supabase
+      .from('work_assignments')
+      .select('slots_consumed, work_id, status')
+      .eq('worker_id', workerId)
+      .neq('status', 'Declined')
+      .neq('status', 'Waitlisted');
     
     if (!slotError && slotData) {
       const consumed = slotData.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
@@ -64,6 +70,7 @@ const GetWork = () => {
     setSelectedWorkId(workId);
     setSlotsToJoin(1);
     setFriendNames([]);
+    setPhotoFile(null);
   };
 
   const handleFriendNameChange = (index, value) => {
@@ -72,9 +79,14 @@ const GetWork = () => {
     setFriendNames(newNames);
   };
 
-  const handleJoinConfirm = async (workId) => {
+  const handleJoinConfirm = async (work) => {
     if (!supabase) {
       setFeedbackMsg({ type: 'error', text: "Cannot join: Backend is disconnected." });
+      return;
+    }
+
+    if (work.requires_photo && !photoFile) {
+      alert("This work requires you to upload a photo of yourself.");
       return;
     }
 
@@ -87,29 +99,45 @@ const GetWork = () => {
     }
 
     const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    setLoading(true);
+
+    let photoUrl = null;
+    if (photoFile) {
+      // Prototype placeholder. In reality, upload to Supabase Storage here.
+      photoUrl = `https://dothozhil.com/proofs/${photoFile.name.replace(/\s+/g, '_')}`;
+    }
 
     const { data, error } = await supabase.rpc('join_work_with_friends', {
-      p_work_id: workId,
+      p_work_id: work.id,
       p_worker_id: workerId,
       p_slots: slotsToJoin,
-      p_friend_names: validFriends
+      p_friend_names: validFriends,
+      p_photo_url: photoUrl
     });
 
     if (error) {
       setFeedbackMsg({ type: 'error', text: "Error joining work: " + error.message });
+      setLoading(false);
       return;
     }
 
-    if (data === true) {
-      setFeedbackMsg({ type: 'success', text: `You have joined the work for ${slotsToJoin} slots! A WhatsApp link will be sent shortly.` });
-      setJoinedWorks(prev => ({ ...prev, [workId]: true }));
-      setSelectedWorkId(null);
-      fetchWorks();
-      fetchMySlots();
-      window.dispatchEvent(new CustomEvent('slotConsumed'));
+    if (data === 'Joined') {
+      setFeedbackMsg({ type: 'success', text: `You have successfully joined the work for ${slotsToJoin} slots!` });
+      setJoinedWorks(prev => ({ ...prev, [work.id]: true }));
+    } else if (data === 'Waitlisted') {
+      setFeedbackMsg({ type: 'success', text: `Work is full, but you have been added to the Waitlist! Your slots were not deducted.` });
+      setJoinedWorks(prev => ({ ...prev, [work.id]: true }));
+    } else if (data === 'AlreadyJoined') {
+      setFeedbackMsg({ type: 'error', text: "You have already joined or applied for this work." });
     } else {
-      setFeedbackMsg({ type: 'error', text: "Failed to join. Either the slots are full or you have already joined this work." });
+      setFeedbackMsg({ type: 'error', text: "Failed to join. The work is completely full (including the waitlist)." });
     }
+    
+    setSelectedWorkId(null);
+    fetchWorks();
+    fetchMySlots();
+    window.dispatchEvent(new CustomEvent('slotConsumed'));
+    setLoading(false);
   };
 
   const filteredWorks = works.filter(w => w.location.toLowerCase().includes(filterLocation.toLowerCase()));
@@ -187,10 +215,23 @@ const GetWork = () => {
               
               {joinedWorks[work.id] ? (
                 <button className="btn-outline" style={{ width: '100%', borderColor: 'var(--success)', color: 'var(--success)' }} disabled>
-                  ✓ Joined
+                  ✓ Joined / Waitlisted
                 </button>
               ) : selectedWorkId === work.id ? (
                 <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}>
+                  
+                  {work.requires_photo && (
+                    <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', border: '1px solid #fde68a' }}>
+                      <label className="label" style={{ color: '#92400e' }}>This work requires a photo</label>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => setPhotoFile(e.target.files[0])}
+                        style={{ width: '100%', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                  )}
+
                   <label className="label">How many slots do you need?</label>
                   <select 
                     className="input-field" 
@@ -198,7 +239,7 @@ const GetWork = () => {
                     onChange={e => setSlotsToJoin(Number(e.target.value))}
                     style={{ marginBottom: '1rem', cursor: 'pointer' }}
                   >
-                    {[...Array(Math.min(work.available_slots, mySlots))].map((_, i) => (
+                    {[...Array(Math.max(1, Math.min(work.available_slots > 0 ? work.available_slots : 5 - work.waitlist_count, mySlots)))].map((_, i) => (
                       <option key={i+1} value={i+1}>{i+1} Slot{i > 0 ? 's' : ''}</option>
                     ))}
                   </select>
@@ -222,17 +263,21 @@ const GetWork = () => {
 
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button onClick={() => setSelectedWorkId(null)} className="btn-outline" style={{ flex: 1 }}>Cancel</button>
-                    <button onClick={() => handleJoinConfirm(work.id)} className="btn-primary" style={{ flex: 1 }}>Confirm Join</button>
+                    <button onClick={() => handleJoinConfirm(work)} className="btn-primary" style={{ flex: 1 }}>
+                      {work.available_slots > 0 ? 'Confirm' : 'Join Waitlist'}
+                    </button>
                   </div>
                 </div>
               ) : (
                 <button 
                   onClick={() => handleJoinInit(work.id)} 
-                  className="btn-primary" 
-                  style={{ width: '100%' }} 
-                  disabled={work.available_slots <= 0 || mySlots <= 0}
+                  className={work.available_slots > 0 ? "btn-primary" : "btn-outline"} 
+                  style={{ width: '100%', borderColor: work.available_slots <= 0 ? 'var(--brand-color)' : '', color: work.available_slots <= 0 ? 'var(--brand-color)' : '' }} 
+                  disabled={(work.available_slots <= 0 && work.waitlist_count >= 5) || mySlots <= 0}
                 >
-                  {work.available_slots > 0 ? (mySlots > 0 ? 'Join Work' : 'No Personal Slots Left') : 'Work Slots Full'}
+                  {work.available_slots > 0 
+                    ? (mySlots > 0 ? 'Join Work' : 'No Personal Slots Left') 
+                    : (work.waitlist_count < 5 ? `Join Waitlist (${5 - work.waitlist_count} left)` : 'Completely Full')}
                 </button>
               )}
             </div>

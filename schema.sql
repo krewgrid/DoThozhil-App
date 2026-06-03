@@ -1,8 +1,9 @@
 -- Run this in your Supabase SQL Editor
 -- WARNING: This will DROP existing tables to apply the new ID format. All existing test data will be lost.
 
-DROP TABLE IF EXISTS work_assignments;
-DROP TABLE IF EXISTS works;
+DROP TABLE IF EXISTS platform_reports CASCADE;
+DROP TABLE IF EXISTS work_assignments CASCADE;
+DROP TABLE IF EXISTS works CASCADE;
 
 -- 1. Create works table with TEXT id
 CREATE TABLE IF NOT EXISTS works (
@@ -20,6 +21,9 @@ CREATE TABLE IF NOT EXISTS works (
   payment_amount int NOT NULL,
   payment_date date NOT NULL,
   status text DEFAULT 'Active',
+  requires_photo boolean DEFAULT false,
+  requires_approval boolean DEFAULT false,
+  waitlist_count int DEFAULT 0 NOT NULL,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -50,7 +54,8 @@ CREATE TABLE IF NOT EXISTS work_assignments (
   worker_id text NOT NULL,
   slots_consumed int DEFAULT 1 NOT NULL,
   friend_names text[] DEFAULT '{}'::text[],
-  status text DEFAULT 'Confirmed',
+  worker_photo_url text,
+  status text DEFAULT 'Confirmed', -- 'Confirmed', 'Pending Approval', 'Declined', 'Waitlisted', 'Paid'
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
   UNIQUE(work_id, worker_id) -- Prevent the same worker from joining twice
 );
@@ -65,33 +70,57 @@ CREATE POLICY "Enable insert for all users" ON works FOR INSERT WITH CHECK (true
 CREATE POLICY "Enable read access for all users" ON work_assignments FOR SELECT USING (true);
 CREATE POLICY "Enable insert for all users" ON work_assignments FOR INSERT WITH CHECK (true);
 
--- 5. Create an RPC function to safely join a work with friends
-CREATE OR REPLACE FUNCTION join_work_with_friends(p_work_id text, p_worker_id text, p_slots int, p_friend_names text[])
-RETURNS boolean
+-- Drop the old version of the function to prevent overloaded ambiguous calls
+DROP FUNCTION IF EXISTS join_work_with_friends(text, text, int, text[]);
+
+-- 5. Create an RPC function to safely join a work with friends and handle waitlist/approvals
+CREATE OR REPLACE FUNCTION join_work_with_friends(p_work_id text, p_worker_id text, p_slots int, p_friend_names text[], p_photo_url text DEFAULT NULL)
+RETURNS text
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
   v_available int;
+  v_requires_approval boolean;
+  v_waitlist_count int;
+  v_status text;
 BEGIN
   -- Check available slots, locking the row for update
-  SELECT available_slots INTO v_available FROM works WHERE id = p_work_id FOR UPDATE;
+  SELECT available_slots, requires_approval, waitlist_count 
+  INTO v_available, v_requires_approval, v_waitlist_count 
+  FROM works WHERE id = p_work_id FOR UPDATE;
 
   IF v_available >= p_slots THEN
+    -- Slots available, check approval
+    IF v_requires_approval THEN
+      v_status := 'Pending Approval';
+    ELSE
+      v_status := 'Confirmed';
+    END IF;
+
     -- Insert the assignment
-    INSERT INTO work_assignments (work_id, worker_id, slots_consumed, friend_names, status) 
-    VALUES (p_work_id, p_worker_id, p_slots, p_friend_names, 'Confirmed');
+    INSERT INTO work_assignments (work_id, worker_id, slots_consumed, friend_names, status, worker_photo_url) 
+    VALUES (p_work_id, p_worker_id, p_slots, p_friend_names, v_status, p_photo_url);
     
     -- Decrement the slots
     UPDATE works SET available_slots = available_slots - p_slots WHERE id = p_work_id;
     
-    RETURN true;
+    RETURN 'Joined';
   ELSE
-    RETURN false; -- Not enough slots left
+    -- Not enough slots, check waitlist limit (max 5)
+    IF v_waitlist_count + p_slots <= 5 THEN
+      INSERT INTO work_assignments (work_id, worker_id, slots_consumed, friend_names, status, worker_photo_url) 
+      VALUES (p_work_id, p_worker_id, p_slots, p_friend_names, 'Waitlisted', p_photo_url);
+      
+      UPDATE works SET waitlist_count = waitlist_count + p_slots WHERE id = p_work_id;
+      RETURN 'Waitlisted';
+    ELSE
+      RETURN 'Full';
+    END IF;
   END IF;
 EXCEPTION WHEN unique_violation THEN
   -- User already joined
-  RETURN false;
+  RETURN 'AlreadyJoined';
 END;
 $$;
 
@@ -193,8 +222,58 @@ CREATE TABLE IF NOT EXISTS platform_reports (
 );
 
 ALTER TABLE platform_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Enable read access for all users" ON platform_reports;
 CREATE POLICY "Enable read access for all users" ON platform_reports FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Enable insert for all users" ON platform_reports;
 CREATE POLICY "Enable insert for all users" ON platform_reports FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update for admins" ON platform_reports FOR UPDATE USING (
-  (SELECT raw_user_meta_data->>'role' FROM auth.users WHERE email = current_user) = 'admin'
+
+-- 11. Create a secure admins table to resolve the user_metadata vulnerability
+CREATE TABLE IF NOT EXISTS admins (
+  email text PRIMARY KEY
 );
+
+ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Enable read access for all users" ON admins;
+CREATE POLICY "Enable read access for all users" ON admins FOR SELECT USING (true);
+
+-- Insert your admin email here
+-- INSERT INTO admins (email) VALUES ('admin@dothozhil.com');
+
+DROP POLICY IF EXISTS "Enable update for admins" ON platform_reports;
+CREATE POLICY "Enable update for admins" ON platform_reports FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM admins WHERE email = (auth.jwt() ->> 'email'))
+);
+
+-- 12. Create RPC for clients to handle worker applications (Approve/Decline)
+CREATE OR REPLACE FUNCTION handle_worker_application(p_assignment_id uuid, p_action text)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_assignment record;
+BEGIN
+  SELECT * INTO v_assignment FROM work_assignments WHERE id = p_assignment_id FOR UPDATE;
+  
+  IF p_action = 'Approve' THEN
+    UPDATE work_assignments SET status = 'Confirmed' WHERE id = p_assignment_id;
+    RETURN true;
+  ELSIF p_action = 'Decline' THEN
+    UPDATE work_assignments SET status = 'Declined' WHERE id = p_assignment_id;
+    
+    -- Refund slots if they were pending
+    IF v_assignment.status = 'Pending Approval' THEN
+      UPDATE works SET available_slots = available_slots + v_assignment.slots_consumed WHERE id = v_assignment.work_id;
+    -- Refund waitlist count if they were waitlisted
+    ELSIF v_assignment.status = 'Waitlisted' THEN
+      UPDATE works SET waitlist_count = waitlist_count - v_assignment.slots_consumed WHERE id = v_assignment.work_id;
+    END IF;
+
+    RETURN true;
+  END IF;
+  
+  RETURN false;
+END;
+$$;
