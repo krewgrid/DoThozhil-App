@@ -54,8 +54,10 @@ const UpperBanner = ({ role }) => {
 
     const { data, error } = await supabase
       .from('work_assignments')
-      .select('slots_consumed')
-      .eq('worker_id', userId);
+      .select('slots_consumed, status')
+      .eq('worker_id', userId)
+      .neq('status', 'Declined')
+      .neq('status', 'Waitlisted');
     
     if (!error && data) {
       const consumed = data.reduce((sum, row) => sum + (row.slots_consumed || 1), 0);
