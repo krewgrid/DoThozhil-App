@@ -3,11 +3,11 @@
 :root {
   --brand-color: #BFDB9E;
   --brand-color-hover: #a8c786;
-  --bg-color: #f7f9fc;
-  --text-main: #111827;
-  --text-muted: #6b7280;
-  --card-bg: #ffffff;
-  --border-color: #e5e7eb;
+  --bg-color: linear-gradient(135deg, #0f172a 0%, #112a1c 100%);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --border-color: #334155;
   --danger: #ef4444;
   --success: #10b981;
 }
@@ -20,7 +20,8 @@
 }
 
 body {
-  background-color: var(--bg-color);
+  background: var(--bg-color);
+  background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -72,10 +73,12 @@ button {
 }
 
 .card {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--border-color);
 }
 
@@ -87,6 +90,8 @@ button {
   outline: none;
   transition: border-color 0.2s ease;
   font-size: 0.95rem;
+  background-color: rgba(15, 23, 42, 0.5);
+  color: var(--text-main);
 }
 
 .input-field:focus {
@@ -126,7 +131,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f7f9fc 0%, #e2eed4 100%);
+  background: var(--bg-color);
   padding: 1rem;
 }
 
@@ -165,7 +170,9 @@ button {
 /* Sidebar & Navigation */
 .sidebar {
   width: 250px;
-  background-color: var(--card-bg);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -192,7 +199,9 @@ button {
 
 /* Upper Banner */
 .upper-banner {
-  background-color: var(--card-bg);
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
   padding: 1rem 2rem;
   display: flex;
