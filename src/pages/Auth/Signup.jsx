@@ -104,8 +104,8 @@ const Signup = () => {
       return;
     }
     
-    localStorage.setItem('dothozhil_username', finalUsername);
-    localStorage.setItem('dothozhil_role', type);
+    localStorage.setItem('krewgrid_username', finalUsername);
+    localStorage.setItem('krewgrid_role', type);
     
     if (type === 'client') {
       navigate('/client/dashboard');

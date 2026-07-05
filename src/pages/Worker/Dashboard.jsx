@@ -24,7 +24,7 @@ const WorkerDashboard = () => {
       if (refCount) setExtraSlots(refCount * 5);
     }
 
-    const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    const workerId = localStorage.getItem('krewgrid_username') || 'guest_worker_456';
 
     // Fetch the work assignments for this worker
     const { data: assignments, error: assignmentsError } = await supabase

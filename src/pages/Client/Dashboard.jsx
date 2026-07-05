@@ -19,7 +19,7 @@ const ClientDashboard = () => {
       return;
     }
 
-    const clientId = localStorage.getItem('dothozhil_username') || 'guest_client_123';
+    const clientId = localStorage.getItem('krewgrid_username') || 'guest_client_123';
 
     const { data, error } = await supabase
       .from('works')
@@ -52,7 +52,7 @@ const ClientDashboard = () => {
     const isConfirmed = window.confirm("Are you sure you want to mark this work as Paid? This will transfer the earnings to the workers' Credited accounts.");
     if (!isConfirmed) return;
 
-    const clientId = localStorage.getItem('dothozhil_username') || 'guest_client_123';
+    const clientId = localStorage.getItem('krewgrid_username') || 'guest_client_123';
 
     const { data, error } = await supabase.rpc('mark_work_paid', {
       p_work_id: workId,

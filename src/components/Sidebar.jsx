@@ -9,8 +9,8 @@ const Sidebar = ({ role }) => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('dothozhil_username');
-    localStorage.removeItem('dothozhil_role');
+    localStorage.removeItem('krewgrid_username');
+    localStorage.removeItem('krewgrid_role');
     navigate('/login');
   };
 
@@ -40,7 +40,7 @@ const Sidebar = ({ role }) => {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand-color)' }}>DoThozhil</h2>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand-color)' }}>krewgrid</h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{role === 'admin' ? 'Admin Portal' : role === 'client' ? 'Client Portal' : 'Worker Portal'}</p>
       </div>
       <div className="sidebar-links">

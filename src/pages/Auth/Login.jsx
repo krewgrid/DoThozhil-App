@@ -31,8 +31,8 @@ const Login = () => {
     // Automatically determine their role based on what they signed up as!
     const storedRole = userMeta.role || 'client'; // fallback just in case
 
-    localStorage.setItem('dothozhil_username', storedName);
-    localStorage.setItem('dothozhil_role', storedRole);
+    localStorage.setItem('krewgrid_username', storedName);
+    localStorage.setItem('krewgrid_role', storedRole);
 
     if (storedRole === 'admin') {
       navigate('/admin/dashboard');
@@ -48,7 +48,7 @@ const Login = () => {
       <div className="auth-card">
         <div className="auth-header">
           <h1>Welcome Back</h1>
-          <p>Login to your DoThozhil account</p>
+          <p>Login to your krewgrid account</p>
         </div>
 
         <form onSubmit={handleLogin}>

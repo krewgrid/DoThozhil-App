@@ -15,7 +15,7 @@ const ReportNoShow = () => {
 
   const fetchActiveWorks = async () => {
     if (!supabase) return;
-    const clientId = localStorage.getItem('dothozhil_username');
+    const clientId = localStorage.getItem('krewgrid_username');
     if (!clientId) return;
 
     // Fetch works for this client
@@ -33,7 +33,7 @@ const ReportNoShow = () => {
 
   const handleSubmitReport = async (workId, workerId) => {
     setLoading(true);
-    const clientId = localStorage.getItem('dothozhil_username');
+    const clientId = localStorage.getItem('krewgrid_username');
 
     if (supabase) {
       const { error } = await supabase.from('platform_reports').insert({

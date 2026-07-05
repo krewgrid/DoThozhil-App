@@ -23,7 +23,7 @@ const GetWork = () => {
 
   const fetchMySlots = async () => {
     if (!supabase) return;
-    const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    const workerId = localStorage.getItem('krewgrid_username') || 'guest_worker_456';
     
     // Fetch slots consumed, excluding Waitlisted and Declined
     const { data: slotData, error: slotError } = await supabase
@@ -98,13 +98,13 @@ const GetWork = () => {
       return;
     }
 
-    const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    const workerId = localStorage.getItem('krewgrid_username') || 'guest_worker_456';
     setLoading(true);
 
     let photoUrl = null;
     if (photoFile) {
       // Prototype placeholder. In reality, upload to Supabase Storage here.
-      photoUrl = `https://dothozhil.com/proofs/${photoFile.name.replace(/\s+/g, '_')}`;
+      photoUrl = `https://krewgrid.com/proofs/${photoFile.name.replace(/\s+/g, '_')}`;
     }
 
     const { data, error } = await supabase.rpc('join_work_with_friends', {

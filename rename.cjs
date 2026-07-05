@@ -14,8 +14,8 @@ function walkDir(dir) {
             if (extensions.includes(path.extname(fullPath))) {
                 let content = fs.readFileSync(fullPath, 'utf8');
                 let newContent = content
-                    .replace(/krewgrid/g, 'krewgrid')
-                    .replace(/krewgrid/g, 'krewgrid');
+                    .replace(/DoThozhil/g, 'krewgrid')
+                    .replace(/dothozhil/g, 'krewgrid');
                 
                 if (content !== newContent) {
                     fs.writeFileSync(fullPath, newContent, 'utf8');

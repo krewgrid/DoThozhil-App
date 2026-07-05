@@ -17,7 +17,7 @@ const WorkerReviews = () => {
       return;
     }
 
-    const workerId = localStorage.getItem('dothozhil_username') || 'guest_worker_456';
+    const workerId = localStorage.getItem('krewgrid_username') || 'guest_worker_456';
 
     const { data: assignments, error } = await supabase
       .from('work_assignments')

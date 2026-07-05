@@ -14,7 +14,7 @@ const ContactUs = () => {
           </div>
           <div>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Email</p>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}>support@dothozhil.com</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}>support@krewgrid.com</h3>
           </div>
         </div>
 

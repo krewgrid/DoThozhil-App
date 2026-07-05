@@ -11,8 +11,8 @@ const UpperBanner = ({ role }) => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('dothozhil_username');
-    localStorage.removeItem('dothozhil_role');
+    localStorage.removeItem('krewgrid_username');
+    localStorage.removeItem('krewgrid_role');
     navigate('/login');
   };
 
@@ -27,7 +27,7 @@ const UpperBanner = ({ role }) => {
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('dothozhil_username');
+    const storedUser = localStorage.getItem('krewgrid_username');
     if (storedUser) {
       setUsername(storedUser);
       if (role === 'worker' && supabase) {
@@ -100,7 +100,7 @@ const UpperBanner = ({ role }) => {
               <p>When a worker joins a work, it consumes their personal slots. If a worker fails to show up for a confirmed work, they may lose slots as a penalty.</p>
 
               <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>2. Payments</h4>
-              <p>All payments are handled between the Client and the Worker. DoThozhil acts purely as a matching platform. Earnings will remain "Pending" until the Client confirms the payment has been made.</p>
+              <p>All payments are handled between the Client and the Worker. krewgrid acts purely as a matching platform. Earnings will remain "Pending" until the Client confirms the payment has been made.</p>
 
               <h4 style={{ fontWeight: '600', marginTop: '1rem', marginBottom: '0.5rem' }}>3. Professional Conduct</h4>
               <p>Both Clients and Workers must maintain professional behavior. Any harassment, fraud, or misuse of the platform will result in permanent account suspension.</p>

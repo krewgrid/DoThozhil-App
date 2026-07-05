@@ -45,7 +45,7 @@ const PostWork = () => {
       .from('works')
       .insert([
         {
-          client_id: localStorage.getItem('dothozhil_username') || 'guest_client_123',
+          client_id: localStorage.getItem('krewgrid_username') || 'guest_client_123',
           work_name: formData.work_name,
           instruction: formData.instruction,
           total_slots: parseInt(formData.total_slots),

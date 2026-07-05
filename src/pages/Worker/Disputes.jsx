@@ -16,7 +16,7 @@ const WorkerDisputes = () => {
 
   const fetchNoShowReports = async () => {
     if (!supabase) return;
-    const workerId = localStorage.getItem('dothozhil_username');
+    const workerId = localStorage.getItem('krewgrid_username');
     if (!workerId) return;
 
     const { data, error } = await supabase
@@ -44,10 +44,10 @@ const WorkerDisputes = () => {
     }
     
     setLoading(true);
-    const workerId = localStorage.getItem('dothozhil_username');
+    const workerId = localStorage.getItem('krewgrid_username');
 
     if (supabase) {
-      const fakeProofUrl = `https://dothozhil.com/proofs/${file.name.replace(/\s+/g, '_')}`;
+      const fakeProofUrl = `https://krewgrid.com/proofs/${file.name.replace(/\s+/g, '_')}`;
       
       const { error } = await supabase.from('platform_reports').insert({
         type: 'Dispute',

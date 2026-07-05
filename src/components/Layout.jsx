@@ -20,10 +20,10 @@ const Layout = ({ role }) => {
       // Sync localStorage with the secure session in case of a page reload
       const userMeta = session.user?.user_metadata || {};
       if (userMeta.username) {
-        localStorage.setItem('dothozhil_username', userMeta.username);
+        localStorage.setItem('krewgrid_username', userMeta.username);
       }
       if (userMeta.role) {
-        localStorage.setItem('dothozhil_role', userMeta.role);
+        localStorage.setItem('krewgrid_role', userMeta.role);
       }
       setLoading(false);
     }
