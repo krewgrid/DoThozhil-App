@@ -3,11 +3,11 @@
 :root {
   --brand-color: #BFDB9E;
   --brand-color-hover: #a8c786;
-  --bg-color: linear-gradient(135deg, #0f172a 0%, #112a1c 100%);
+  --bg-color: linear-gradient(135deg, #0f172a 0%, #064e3b 100%);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --card-bg: rgba(30, 41, 59, 0.7);
-  --border-color: #334155;
+  --card-bg: rgba(30, 41, 59, 0.25);
+  --border-color: rgba(255, 255, 255, 0.1);
   --danger: #ef4444;
   --success: #10b981;
 }
@@ -74,29 +74,30 @@ button {
 
 .card {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 1rem;
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border-radius: 1.2rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   border: 1px solid var(--border-color);
 }
 
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.75rem;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
   font-size: 0.95rem;
-  background-color: rgba(15, 23, 42, 0.5);
+  background-color: rgba(15, 23, 42, 0.4);
   color: var(--text-main);
 }
 
 .input-field:focus {
   border-color: var(--brand-color);
-  box-shadow: 0 0 0 3px rgba(191, 219, 158, 0.3);
+  background-color: rgba(15, 23, 42, 0.6);
+  box-shadow: 0 0 0 3px rgba(191, 219, 158, 0.2);
 }
 
 .label {
@@ -139,9 +140,12 @@ button {
   width: 100%;
   max-width: 480px;
   background: var(--card-bg);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-radius: 1.5rem;
   padding: 2.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .auth-header {
@@ -171,8 +175,8 @@ button {
 .sidebar {
   width: 250px;
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -200,8 +204,8 @@ button {
 /* Upper Banner */
 .upper-banner {
   background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-bottom: 1px solid var(--border-color);
   padding: 1rem 2rem;
   display: flex;
