@@ -39,8 +39,8 @@ const Sidebar = ({ role }) => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-        <img src="/logo.png" alt="krewgrid" style={{ height: '32px', objectFit: 'contain', alignSelf: 'flex-start' }} />
+      <div className="sidebar-header desktop-only" style={{ flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+        <img src="/logo.png" alt="krewgrid" style={{ height: '32px', objectFit: 'contain', alignSelf: 'flex-start', mixBlendMode: 'screen', filter: 'brightness(1.2)' }} />
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>{role === 'admin' ? 'Admin Portal' : role === 'client' ? 'Client Portal' : 'Worker Portal'}</p>
       </div>
       <div className="sidebar-links">

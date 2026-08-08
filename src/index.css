@@ -187,6 +187,7 @@ button {
 .sidebar-header {
   padding: 2rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  display: flex;
 }
 
 .sidebar-links {
@@ -319,7 +320,7 @@ button {
   }
 
   .mobile-only {
-    display: block !important;
+    display: flex !important;
   }
 }
 
