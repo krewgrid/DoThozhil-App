@@ -67,7 +67,7 @@ const ReportNoShow = () => {
         {fetching ? (
           <p>Loading active works...</p>
         ) : activeWorks.length === 0 ? (
-          <div style={{ border: '1px dashed var(--border-color)', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', backgroundColor: '#f9fafb' }}>
+          <div style={{ border: '1px dashed var(--border-color)', borderRadius: '0.5rem', padding: '2rem', textAlign: 'center', backgroundColor: 'rgba(15, 23, 42, 0.4)' }}>
             <p style={{ color: 'var(--text-muted)' }}>You have no active works to report on right now.</p>
           </div>
         ) : (
@@ -79,11 +79,11 @@ const ReportNoShow = () => {
                     <h3 style={{ fontWeight: '600' }}>Work Name: {work.work_name}</h3>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{work.date_of_work}</p>
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--brand-color)', fontWeight: '600', backgroundColor: '#f0fdf4', padding: '0.2rem 0.6rem', borderRadius: '1rem' }}>Active</span>
+                  <span style={{ fontSize: '0.85rem', color: '#5eead4', fontWeight: '600', backgroundColor: 'rgba(20, 184, 166, 0.2)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }}>Active</span>
                 </div>
 
                 {isSubmitted ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4', borderRadius: '0.5rem', color: '#166534', fontWeight: '500' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.5rem', backgroundColor: 'rgba(20, 184, 166, 0.1)', borderRadius: '0.5rem', color: '#5eead4', fontWeight: '500' }}>
                     <CheckCircle size={20} />
                     Worker has been reported and penalized.
                   </div>
@@ -91,13 +91,13 @@ const ReportNoShow = () => {
                   <div style={{ display: 'grid', gap: '1rem' }}>
                     {work.work_assignments && work.work_assignments.length > 0 ? (
                       work.work_assignments.map((assignment, idx) => (
-                        <div key={idx} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fca5a5' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fca5a5' }}>
                             <AlertTriangle size={20} />
                           </div>
                           <div style={{ flex: 1, minWidth: '200px' }}>
-                            <p style={{ fontWeight: '500' }}>Worker: {assignment.worker_id}</p>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--danger)' }}>Mark as No Show? Worker will lose 10 slots.</p>
+                            <p style={{ fontWeight: '500', color: 'var(--text-main)' }}>Worker: {assignment.worker_id}</p>
+                            <p style={{ fontSize: '0.85rem', color: '#fca5a5' }}>Mark as No Show? Worker will lose 10 slots.</p>
                           </div>
                           <button onClick={() => handleSubmitReport(work.id, assignment.worker_id)} disabled={loading} className="btn-primary" style={{ backgroundColor: 'var(--danger)', color: 'white', padding: '0.4rem 1rem' }}>
                             {loading ? 'Submitting...' : 'Report No Show'}

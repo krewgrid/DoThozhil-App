@@ -23,17 +23,17 @@ const Reviews = () => {
           </div>
 
           {isSubmitted ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4', borderRadius: '0.5rem', color: '#166534', fontWeight: '500' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '1.5rem', backgroundColor: 'rgba(20, 184, 166, 0.1)', borderRadius: '0.5rem', color: '#5eead4', fontWeight: '500' }}>
               <CheckCircle size={20} />
               Review submitted successfully!
             </div>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', padding: '1rem', backgroundColor: 'rgba(15, 23, 42, 0.4)', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 W1
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '500' }}>Worker 1 (John Doe)</p>
+                <p style={{ fontWeight: '500', color: 'var(--text-main)' }}>Worker 1 (John Doe)</p>
               </div>
               <div style={{ display: 'flex', gap: '0.2rem' }}>
                 {[1,2,3,4,5].map(i => (
