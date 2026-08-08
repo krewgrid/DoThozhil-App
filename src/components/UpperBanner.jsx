@@ -67,8 +67,11 @@ const UpperBanner = ({ role }) => {
 
   return (
     <div className="upper-banner">
-      <div className="mobile-only" style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--brand-color)' }}>
-        krewgrid
+      <div className="mobile-only" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <img src="/logo.png" alt="krewgrid" style={{ height: '26px', objectFit: 'contain' }} />
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600', marginTop: '2px' }}>
+          {role === 'admin' ? 'Admin Portal' : role === 'client' ? 'Client Portal' : 'Worker Portal'}
+        </span>
       </div>
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end', flex: 1 }}>
         {username && (
