@@ -55,9 +55,9 @@ const Sidebar = ({ role }) => {
                 alignItems: 'center',
                 gap: '0.75rem',
                 padding: '0.75rem 1rem',
-                borderRadius: '0.5rem',
-                backgroundColor: isActive ? 'var(--brand-color)' : 'transparent',
-                color: isActive ? '#0f172a' : 'var(--text-main)',
+                borderRadius: '1rem',
+                backgroundColor: isActive ? 'rgba(191, 219, 158, 0.15)' : 'transparent',
+                color: isActive ? 'var(--brand-color)' : 'var(--text-muted)',
                 fontWeight: isActive ? '600' : '500',
                 transition: 'all 0.2s',
               }}
