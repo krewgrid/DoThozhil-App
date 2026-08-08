@@ -55,7 +55,7 @@ const Reviews = () => {
                   return;
                 }
                 setIsSubmitted(true);
-              }} className="btn-outline" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
+              }} className="btn-primary" style={{ padding: '0.4rem 1rem' }}>Submit Review</button>
             </div>
           )}
         </div>
