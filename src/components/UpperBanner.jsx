@@ -67,26 +67,29 @@ const UpperBanner = ({ role }) => {
 
   return (
     <div className="upper-banner">
-      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+      <div className="mobile-only" style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--brand-color)' }}>
+        krewgrid
+      </div>
+      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end', flex: 1 }}>
         {username && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', paddingRight: '1rem', borderRight: '1px solid var(--border-color)' }}>
+          <div className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', paddingRight: '1rem', borderRight: '1px solid var(--border-color)' }}>
             <User size={18} color="var(--brand-color)" />
             {username}
           </div>
         )}
         {role === 'worker' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#d97706', paddingRight: '1rem', borderRight: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.9rem', fontWeight: '600', color: '#d97706', paddingRight: '0.5rem' }}>
             <Ticket size={18} />
-            {slotsLeft} Slots Left
+            {slotsLeft} <span className="desktop-only">Slots Left</span>
           </div>
         )}
-        <button onClick={() => setShowTnc(true)} style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>T&C</button>
+        <button onClick={() => setShowTnc(true)} className="desktop-only" style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--text-main)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>T&C</button>
         {role === 'worker' && (
-          <button onClick={handleInvite} className="btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite & Earn Slots</button>
+          <button onClick={handleInvite} className="btn-outline desktop-only" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Invite</button>
         )}
-        <button className="mobile-signout" onClick={handleSignOut}>
+        <button className="mobile-signout" onClick={handleSignOut} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--danger)', fontWeight: '600', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
           <LogOut size={18} />
-          Sign Out
+          <span className="desktop-only">Sign Out</span>
         </button>
       </div>
 
