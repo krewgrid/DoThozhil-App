@@ -222,21 +222,24 @@ button {
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
-    padding-bottom: 75px; /* Prevent content from hiding under bottom nav */
+    padding-bottom: 95px; /* Prevent content from hiding under floating bottom nav */
   }
   
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: none;
-    border-top: 1px solid var(--border-color);
+    width: auto;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     position: fixed;
-    bottom: 0;
-    left: 0;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
     z-index: 100;
     flex-direction: row;
     padding: 0.5rem;
-    background: rgba(15, 23, 42, 0.9); /* Darker glass for bottom nav */
+    background: rgba(30, 41, 59, 0.85); /* Slightly lighter glass for the pill */
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-radius: 2rem;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   }
   
   .sidebar-header {
