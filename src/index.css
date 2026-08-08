@@ -215,8 +215,8 @@ button {
   align-items: center;
 }
 
-.mobile-signout {
-  display: none;
+.mobile-signout, .mobile-only {
+  display: none !important;
 }
 
 /* Mobile Media Queries */
@@ -322,8 +322,4 @@ button {
   .mobile-only {
     display: flex !important;
   }
-}
-
-.mobile-only {
-  display: none !important;
 }
