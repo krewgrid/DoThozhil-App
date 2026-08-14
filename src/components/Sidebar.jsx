@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, PlusSquare, Search, FileText, Settings, LogOut, MessageSquare, Headphones } from 'lucide-react';
+import { Home, PlusSquare, Search, FileText, Settings, LogOut, MessageSquare, Headphones, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const Sidebar = ({ role }) => {
@@ -19,6 +19,7 @@ const Sidebar = ({ role }) => {
     { name: 'Post A Work', path: '/client/post-work', icon: <PlusSquare size={20} /> },
     { name: 'Review Workers', path: '/client/reviews', icon: <FileText size={20} /> },
     { name: 'Report No Show', path: '/client/report-no-show', icon: <MessageSquare size={20} /> },
+    { name: 'Profile', path: '/client/profile', icon: <User size={20} /> },
     { name: 'Contact Us', path: '/client/contact', icon: <Headphones size={20} /> },
   ];
 
@@ -28,11 +29,13 @@ const Sidebar = ({ role }) => {
     { name: 'Buy Slots', path: '/worker/buy-slots', icon: <PlusSquare size={20} /> },
     { name: 'Review Clients', path: '/worker/reviews', icon: <FileText size={20} /> },
     { name: 'Disputes', path: '/worker/disputes', icon: <MessageSquare size={20} /> },
+    { name: 'Profile', path: '/worker/profile', icon: <User size={20} /> },
     { name: 'Contact Us', path: '/worker/contact', icon: <Headphones size={20} /> },
   ];
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <Home size={20} /> },
+    { name: 'Profile', path: '/admin/profile', icon: <User size={20} /> },
   ];
 
   const links = role === 'admin' ? adminLinks : role === 'client' ? clientLinks : workerLinks;

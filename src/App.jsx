@@ -21,6 +21,7 @@ import WorkerDisputes from './pages/Worker/Disputes';
 
 // Shared Pages
 import ContactUs from './pages/Shared/ContactUs';
+import Profile from './pages/Shared/Profile';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="reviews" element={<ClientReviews />} />
           <Route path="report-no-show" element={<ReportNoShow />} />
           <Route path="contact" element={<ContactUs />} />
+          <Route path="profile" element={<Profile role="client" />} />
         </Route>
 
         {/* Worker Routes */}
@@ -50,10 +52,12 @@ function App() {
           <Route path="reviews" element={<WorkerReviews />} />
           <Route path="disputes" element={<WorkerDisputes />} />
           <Route path="contact" element={<ContactUs />} />
+          <Route path="profile" element={<Profile role="worker" />} />
         </Route>
         {/* Admin Routes */}
         <Route path="/admin" element={<Layout role="admin" />}>
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="profile" element={<Profile role="admin" />} />
         </Route>
       </Routes>
     </BrowserRouter>
