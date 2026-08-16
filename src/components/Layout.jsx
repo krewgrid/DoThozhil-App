@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import UpperBanner from './UpperBanner';
 import { supabase } from '../lib/supabase';
 
 const Layout = ({ role }) => {
@@ -17,7 +15,6 @@ const Layout = ({ role }) => {
     if (!session) {
       navigate('/login');
     } else {
-      // Sync localStorage with the secure session in case of a page reload
       const userMeta = session.user?.user_metadata || {};
       if (userMeta.username) {
         localStorage.setItem('krewgrid_username', userMeta.username);
@@ -34,12 +31,8 @@ const Layout = ({ role }) => {
   }
 
   return (
-    <div className="app-container">
-      <Sidebar role={role} />
-      <div className="main-content">
-        <UpperBanner role={role} />
-        <Outlet />
-      </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <Outlet />
     </div>
   );
 };
