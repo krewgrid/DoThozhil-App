@@ -10,9 +10,6 @@ import PostWork from './pages/Client/PostWork';
 import ClientReviews from './pages/Client/Reviews';
 import ReportNoShow from './pages/Client/ReportNoShow';
 
-// Admin Pages
-import AdminDashboard from './pages/Admin/Dashboard';
-
 // Worker Pages
 import WorkerHome from './pages/Worker/Home';
 import WorkerDashboard from './pages/Worker/Dashboard';
@@ -58,10 +55,6 @@ function App() {
           <Route path="contact" element={<ContactUs />} />
           <Route path="profile" element={<Profile role="worker" />} />
         </Route>
-        {/* Admin Routes */}
-        <Route path="/admin" element={<Layout role="admin" />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="profile" element={<Profile role="admin" />} />
         </Route>
       </Routes>
     </BrowserRouter>

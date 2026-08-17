@@ -32,14 +32,6 @@ const Layout = ({ role }) => {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-muted)' }}>Loading securely...</div>;
   }
 
-  if (role === 'admin') {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <Outlet />
-      </div>
-    );
-  }
-
   const path = location.pathname;
   let activeItem = "Dashboard";
   let isHome = false;
