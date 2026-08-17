@@ -83,7 +83,7 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                   <button
                     key={item}
                     onClick={onSignOut}
-                    className="text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full hover:bg-white/10 hover:text-white"
+                    className="text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border border-transparent hover:bg-zinc-500/30 hover:backdrop-blur-md hover:border-white/10 hover:text-white"
                     style={{ color: "rgba(225, 224, 204, 0.8)" }}
                   >
                     {item}
@@ -98,10 +98,10 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                     e.preventDefault();
                     if (onNavClick) onNavClick(item);
                   }}
-                  className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full ${
+                  className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border ${
                     isActive 
-                      ? 'bg-zinc-500/30 backdrop-blur-md text-white border border-white/10 shadow-sm' 
-                      : 'hover:bg-white/10 hover:text-white'
+                      ? 'bg-zinc-500/30 backdrop-blur-md text-white border-white/10 shadow-sm' 
+                      : 'border-transparent hover:bg-zinc-500/30 hover:backdrop-blur-md hover:border-white/10 hover:text-white'
                   }`}
                   style={{ color: isActive ? "#fff" : "rgba(225, 224, 204, 0.8)" }}
                 >
