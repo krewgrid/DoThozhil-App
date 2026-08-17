@@ -48,6 +48,8 @@ const Layout = ({ role }) => {
     activeItem = "Home";
     isHome = true;
   } else if (path.includes('dashboard')) activeItem = "Dashboard";
+  else if (path.includes('post-work')) activeItem = "Post a work";
+  else if (path.includes('get-work')) activeItem = "Get a work";
   else if (path.includes('reviews') && role === 'client') activeItem = "Review Workers";
   else if (path.includes('reviews') && role === 'worker') activeItem = "Review Clients";
   else if (path.includes('report-no-show')) activeItem = "Report No Show";
@@ -59,6 +61,8 @@ const Layout = ({ role }) => {
   const handleNavClick = (item) => {
     if (item === "Home") navigate(`/${role}/home`);
     else if (item === "Dashboard") navigate(`/${role}/dashboard`);
+    else if (item === "Post a work") navigate('/client/post-work');
+    else if (item === "Get a work") navigate('/worker/get-work');
     else if (item === "Review Workers") navigate('/client/reviews');
     else if (item === "Review Clients") navigate('/worker/reviews');
     else if (item === "Report No Show") navigate('/client/report-no-show');

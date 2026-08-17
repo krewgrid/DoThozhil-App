@@ -54,8 +54,8 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
   const isClient = role === "client";
 
   const navItems = isClient
-    ? ["Home", "Dashboard", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
-    : ["Home", "Dashboard", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
+    ? ["Home", "Dashboard", "Post a work", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
+    : ["Home", "Dashboard", "Get a work", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
 
   const buttonText = isClient ? "Post a work" : "Get a work";
 
@@ -91,6 +91,26 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                 )
               }
               const isActive = activeItem === item;
+              
+              if (item === "Post a work" || item === "Get a work") {
+                return (
+                  <button
+                    key={item}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (onNavClick) onNavClick(item);
+                    }}
+                    className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-4 py-1.5 rounded-lg border ${
+                      isActive 
+                        ? 'bg-zinc-500/30 backdrop-blur-md text-white border-white/40 shadow-sm' 
+                        : 'border-white/20 text-white hover:bg-white/10 hover:border-white/40'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              }
+
               return (
                 <button
                   key={item}
