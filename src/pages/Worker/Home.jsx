@@ -7,7 +7,8 @@ const Home = () => {
   const navigate = useNavigate();
 
   const handleNavClick = (item) => {
-    if (item === "Review Clients") navigate('/worker/reviews');
+    if (item === "Home") navigate('/worker/home');
+    else if (item === "Review Clients") navigate('/worker/reviews');
     else if (item === "Buy Slots") navigate('/worker/buy-slots');
     else if (item === "Profile") navigate('/worker/profile');
     else if (item === "Contact Us") navigate('/worker/contact');
@@ -23,6 +24,7 @@ const Home = () => {
   return (
     <PrismaHero 
       role="worker"
+      activeItem="Home"
       onPrimaryAction={() => navigate('/worker/get-work')}
       onSignOut={handleSignOut}
       onNavClick={handleNavClick}

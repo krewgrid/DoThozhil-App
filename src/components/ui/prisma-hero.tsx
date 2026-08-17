@@ -42,18 +42,19 @@ export const WordsPullUp = ({ text, className = "", showAsterisk = false, style 
 /* ---------------- PrismaHero ---------------- */
 interface PrismaHeroProps {
   role: "client" | "worker";
+  activeItem?: string;
   onPrimaryAction?: () => void;
   onSignOut?: () => void;
   onNavClick?: (item: string) => void;
   children?: React.ReactNode;
 }
 
-export const PrismaHero = ({ role, onPrimaryAction, onSignOut, onNavClick, children }: PrismaHeroProps) => {
+export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNavClick, children }: PrismaHeroProps) => {
   const isClient = role === "client";
 
   const navItems = isClient
-    ? ["Dashboard", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
-    : ["Dashboard", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
+    ? ["Home", "Dashboard", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
+    : ["Home", "Dashboard", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
 
   const buttonText = isClient ? "Post a work" : "Get a work";
 
@@ -78,23 +79,22 @@ export const PrismaHero = ({ role, onPrimaryAction, onSignOut, onNavClick, child
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
 
         {/* Navbar */}
-        <nav className="absolute left-1/2 top-0 z-20 -translate-x-1/2 w-full flex justify-center">
-          <div className="flex flex-wrap items-center justify-center gap-3 rounded-b-2xl bg-black px-4 py-3 sm:gap-6 md:gap-12 md:rounded-b-3xl md:px-8 lg:gap-14 max-w-[95%]">
+        <nav className="absolute left-1/2 top-0 z-20 -translate-x-1/2 w-full flex justify-center mt-2">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 md:gap-4 rounded-full bg-black/60 backdrop-blur-lg px-2 py-2 md:px-4 max-w-[95%] border border-white/10">
             {navItems.map((item) => {
               if (item === "Sign Out") {
                 return (
                   <button
                     key={item}
                     onClick={onSignOut}
-                    className="text-[10px] transition-colors sm:text-xs md:text-sm whitespace-nowrap"
+                    className="text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full hover:bg-white/10 hover:text-white"
                     style={{ color: "rgba(225, 224, 204, 0.8)" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#E1E0CC")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(225, 224, 204, 0.8)")}
                   >
                     {item}
                   </button>
                 )
               }
+              const isActive = activeItem === item;
               return (
                 <button
                   key={item}
@@ -102,10 +102,12 @@ export const PrismaHero = ({ role, onPrimaryAction, onSignOut, onNavClick, child
                     e.preventDefault();
                     if (onNavClick) onNavClick(item);
                   }}
-                  className="text-[10px] transition-colors sm:text-xs md:text-sm whitespace-nowrap"
-                  style={{ color: "rgba(225, 224, 204, 0.8)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#E1E0CC")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(225, 224, 204, 0.8)")}
+                  className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full ${
+                    isActive 
+                      ? 'bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-sm' 
+                      : 'hover:bg-white/10 hover:text-white'
+                  }`}
+                  style={{ color: isActive ? "#fff" : "rgba(225, 224, 204, 0.8)" }}
                 >
                   {item}
                 </button>
