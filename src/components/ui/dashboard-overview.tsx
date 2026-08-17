@@ -76,11 +76,11 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           onClick={onPostWork}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="group inline-flex items-center gap-2 rounded-full bg-white py-1 pl-5 pr-1 text-sm font-medium text-black transition-all hover:gap-3"
+          className="group inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/40 backdrop-blur-md py-1.5 pl-4 pr-1.5 text-sm font-medium text-white transition-all hover:bg-white/10 hover:border-white/40 hover:gap-3"
         >
           Post a work
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E1E0CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-black/60 transition-transform group-hover:scale-110">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
           </span>
         </motion.button>
       </div>
@@ -161,11 +161,11 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
           onClick={onGetWork}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="group inline-flex items-center gap-2 rounded-full bg-white py-1 pl-5 pr-1 text-sm font-medium text-black transition-all hover:gap-3"
+          className="group inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/40 backdrop-blur-md py-1.5 pl-4 pr-1.5 text-sm font-medium text-white transition-all hover:bg-white/10 hover:border-white/40 hover:gap-3"
         >
           Get a work
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E1E0CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-black/60 transition-transform group-hover:scale-110">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
           </span>
         </motion.button>
       </div>

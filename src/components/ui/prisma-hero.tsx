@@ -54,8 +54,8 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
   const isClient = role === "client";
 
   const navItems = isClient
-    ? ["Home", "Dashboard", "Post a work", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
-    : ["Home", "Dashboard", "Get a work", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
+    ? ["Home", "Dashboard", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
+    : ["Home", "Dashboard", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
 
   const buttonText = isClient ? "Post a work" : "Get a work";
 
@@ -91,26 +91,6 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                 )
               }
               const isActive = activeItem === item;
-              
-              if (item === "Post a work" || item === "Get a work") {
-                return (
-                  <button
-                    key={item}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (onNavClick) onNavClick(item);
-                    }}
-                    className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-4 py-1.5 rounded-lg border ${
-                      isActive 
-                        ? 'bg-zinc-500/30 backdrop-blur-md text-white border-white/40 shadow-sm' 
-                        : 'border-white/20 text-white hover:bg-white/10 hover:border-white/40'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                )
-              }
-
               return (
                 <button
                   key={item}
@@ -165,11 +145,11 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                  className="group inline-flex items-center gap-2 self-start rounded-full bg-white py-1 pl-5 pr-1 text-sm font-medium text-black transition-all hover:gap-3 sm:text-base"
+                  className="group inline-flex items-center gap-2 self-start rounded-xl border border-white/20 bg-black/40 backdrop-blur-md py-1.5 pl-5 pr-1.5 text-sm font-medium text-white transition-all hover:bg-white/10 hover:border-white/40 hover:gap-3 sm:text-base"
                 >
                   {buttonText}
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
-                    <ArrowRight className="h-4 w-4" style={{ color: "#E1E0CC" }} />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-black/60 transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
+                    <ArrowRight className="h-4 w-4 text-white" />
                   </span>
                 </motion.button>
 
