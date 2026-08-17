@@ -1,35 +1,4 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { PrismaHero } from '../../components/ui/prisma-hero';
-import { supabase } from '../../lib/supabase';
-
 const Home = () => {
-  const navigate = useNavigate();
-
-  const handleNavClick = (item) => {
-    if (item === "Home") navigate('/worker/home');
-    else if (item === "Review Clients") navigate('/worker/reviews');
-    else if (item === "Buy Slots") navigate('/worker/buy-slots');
-    else if (item === "Profile") navigate('/worker/profile');
-    else if (item === "Contact Us") navigate('/worker/contact');
-    else if (item === "Disputes") navigate('/worker/disputes');
-    else if (item === "Dashboard") navigate('/worker/dashboard');
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
-  return (
-    <PrismaHero 
-      role="worker"
-      activeItem="Home"
-      onPrimaryAction={() => navigate('/worker/get-work')}
-      onSignOut={handleSignOut}
-      onNavClick={handleNavClick}
-    />
-  );
+  return null;
 };
-
 export default Home;

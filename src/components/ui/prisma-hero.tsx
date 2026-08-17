@@ -43,13 +43,14 @@ export const WordsPullUp = ({ text, className = "", showAsterisk = false, style 
 interface PrismaHeroProps {
   role: "client" | "worker";
   activeItem?: string;
+  isHome?: boolean;
   onPrimaryAction?: () => void;
   onSignOut?: () => void;
   onNavClick?: (item: string) => void;
   children?: React.ReactNode;
 }
 
-export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNavClick, children }: PrismaHeroProps) => {
+export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOut, onNavClick, children }: PrismaHeroProps) => {
   const isClient = role === "client";
 
   const navItems = isClient
@@ -59,7 +60,7 @@ export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNav
   const buttonText = isClient ? "Post a work" : "Get a work";
 
   return (
-    <section className="h-screen w-full p-2 md:p-4">
+    <section className="h-screen w-full p-2 md:p-4 bg-black">
       <div className="relative h-full w-full overflow-hidden rounded-2xl md:rounded-[2rem]">
         {/* Background gradient */}
         <div 
@@ -99,7 +100,7 @@ export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNav
                   }}
                   className={`text-[10px] transition-all sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full ${
                     isActive 
-                      ? 'bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-sm' 
+                      ? 'bg-zinc-500/30 backdrop-blur-md text-white border border-white/10 shadow-sm' 
                       : 'hover:bg-white/10 hover:text-white'
                   }`}
                   style={{ color: isActive ? "#fff" : "rgba(225, 224, 204, 0.8)" }}
@@ -112,7 +113,7 @@ export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNav
         </nav>
 
         {/* Hero content */}
-        {children ? (
+        {!isHome && children ? (
           children
         ) : (
           <div className="absolute bottom-0 left-0 right-0 px-4 pb-8 sm:px-6 md:px-10">

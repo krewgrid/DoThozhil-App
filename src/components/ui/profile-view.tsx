@@ -39,7 +39,7 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
   }
 
   return (
-    <div className="flex w-full min-h-screen items-center justify-center p-6">
+    <div className="flex w-full h-full overflow-y-auto items-start justify-center p-6 pt-28 pb-20 relative z-10">
       <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-sm md:p-10 relative">
         <button 
           onClick={onBack}

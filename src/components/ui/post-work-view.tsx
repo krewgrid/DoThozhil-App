@@ -23,8 +23,8 @@ export function PostWorkView({ onBack }: { onBack: () => void }) {
   const workId = "WRK-" + Math.random().toString(36).substring(2, 9).toUpperCase()
 
   return (
-    <div className="flex w-full min-h-screen items-center justify-center bg-background p-6">
-      <div className="w-full max-w-3xl rounded-3xl border bg-background p-6 shadow-sm md:p-8 relative">
+    <div className="flex w-full h-full overflow-y-auto items-start justify-center p-6 pt-28 pb-20 relative z-10">
+      <div className="w-full max-w-3xl rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-6 text-white shadow-sm md:p-8 relative">
         <button 
           onClick={onBack}
           className="absolute top-8 left-8 text-muted-foreground hover:text-foreground transition-colors"
