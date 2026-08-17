@@ -32,6 +32,11 @@ const Layout = ({ role }) => {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-muted)' }}>Loading securely...</div>;
   }
   
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
   if (role === 'admin') {
     return (
       <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
@@ -45,7 +50,7 @@ const Layout = ({ role }) => {
               <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">No-Shows</div>
               <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">Users</div>
             </nav>
-            <button onClick={handleLogout} className="px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-red-400/10 font-medium text-sm text-left transition-colors">
+            <button onClick={handleSignOut} className="px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-red-400/10 font-medium text-sm text-left transition-colors">
               Sign Out
             </button>
           </div>
@@ -88,11 +93,6 @@ const Layout = ({ role }) => {
     else if (item === "Contact Us") navigate(`/${role}/contact`);
     else if (item === "Buy Slots") navigate('/worker/buy-slots');
     else if (item === "Disputes") navigate('/worker/disputes');
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
   };
 
   const handlePrimaryAction = () => {
