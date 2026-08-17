@@ -1,27 +1,23 @@
 import { useState } from "react"
 import GlassRadioGroup from "./glass-radio-group"
-import { Check } from "lucide-react"
 
 export function BuySlotsView() {
   const [plan, setPlan] = useState("silver")
 
-  const details: Record<string, { price: string; slots: string; features: string[]; theme: string }> = {
+  const details: Record<string, { price: string; slots: string; theme: string }> = {
     silver: { 
       price: "200rs", 
       slots: "10 slots",
-      features: ["10 Job Applications", "Standard visibility", "Basic support"],
       theme: "text-zinc-300"
     },
     gold: { 
       price: "500rs", 
       slots: "30 slots",
-      features: ["30 Job Applications", "Priority visibility", "Faster support"],
       theme: "text-yellow-400"
     },
     platinum: { 
       price: "750rs", 
       slots: "50 slots",
-      features: ["50 Job Applications", "Top visibility", "24/7 Priority support"],
       theme: "text-sky-300"
     },
   }
@@ -50,15 +46,6 @@ export function BuySlotsView() {
            <h2 className={`text-2xl font-bold mb-2 capitalize ${selectedDetails.theme}`}>{plan}</h2>
            <div className="text-5xl font-extrabold text-white mb-2">{selectedDetails.price}</div>
            <div className="text-lg font-semibold text-zinc-300 mb-8">{selectedDetails.slots}</div>
-           
-           <ul className="flex flex-col gap-3 mb-8 text-left max-w-[250px] mx-auto">
-             {selectedDetails.features.map((feature, i) => (
-               <li key={i} className="flex items-center gap-3 text-sm text-zinc-300">
-                 <Check className={`w-4 h-4 shrink-0 ${selectedDetails.theme}`} />
-                 <span>{feature}</span>
-               </li>
-             ))}
-           </ul>
 
            <button className="w-full py-4 rounded-xl font-bold bg-white text-black transition-transform hover:scale-105 active:scale-95 shadow-lg">
              Proceed to Payment
