@@ -6,7 +6,9 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = (role) => {
-    if (role === 'client') {
+    if (role === 'admin') {
+      navigate('/control-centre/dashboard');
+    } else if (role === 'client') {
       navigate('/client/home');
     } else {
       navigate('/worker/home');

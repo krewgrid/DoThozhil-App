@@ -107,7 +107,7 @@ PasswordInput.displayName = "PasswordInput";
 
 import { supabase } from '@/lib/supabase';
 
-function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker") => void }) {
+function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -132,12 +132,16 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker") => void 
 
     const userMeta = data.user?.user_metadata || {};
     const storedName = userMeta.username || email.split('@')[0];
-    const storedRole = userMeta.role || 'client';
+    let storedRole = userMeta.role || 'client';
+    
+    if (email === 'krewgrid.admin@gmail.com') {
+      storedRole = 'admin';
+    }
 
     localStorage.setItem('krewgrid_username', storedName);
     localStorage.setItem('krewgrid_role', storedRole);
     
-    onLogin(storedRole as "client" | "worker");
+    onLogin(storedRole as "client" | "worker" | "admin");
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
@@ -245,7 +249,7 @@ function RoleSelection({ onSelectRole }: { onSelectRole: (role: "client" | "work
 
 export type AuthMode = "signIn" | "roleSelection" | "signUpClient" | "signUpWorker";
 
-function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode: (mode: AuthMode) => void; onLogin?: (role: "client" | "worker") => void; }) {
+function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode: (mode: AuthMode) => void; onLogin?: (role: "client" | "worker" | "admin") => void; }) {
     return (
         <div className="mx-auto grid w-[350px] gap-2">
             {mode === "signIn" && <SignInForm onLogin={onLogin || (() => {})} />}
@@ -274,7 +278,7 @@ function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode
     )
 }
 
-export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker") => void }) {
+export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "admin") => void }) {
   const [mode, setMode] = useState<AuthMode>("signIn");
 
   return (

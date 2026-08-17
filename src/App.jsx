@@ -22,6 +22,9 @@ import WorkerDisputes from './pages/Worker/Disputes';
 import ContactUs from './pages/Shared/ContactUs';
 import Profile from './pages/Shared/Profile';
 
+// Admin Pages
+import ControlCentreDashboard from './pages/ControlCentre/Dashboard';
+
 function App() {
   return (
     <BrowserRouter>
@@ -55,6 +58,10 @@ function App() {
           <Route path="contact" element={<ContactUs />} />
           <Route path="profile" element={<Profile role="worker" />} />
         </Route>
+
+        {/* Admin Routes */}
+        <Route path="/control-centre" element={<Layout role="admin" />}>
+          <Route path="dashboard" element={<ControlCentreDashboard />} />
         </Route>
       </Routes>
     </BrowserRouter>

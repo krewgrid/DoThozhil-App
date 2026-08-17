@@ -31,6 +31,32 @@ const Layout = ({ role }) => {
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-muted)' }}>Loading securely...</div>;
   }
+  
+  if (role === 'admin') {
+    return (
+      <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
+        <div className="flex h-screen">
+          {/* Admin Sidebar */}
+          <div className="w-64 border-r border-white/10 bg-zinc-950 p-6 flex flex-col gap-6">
+            <div className="text-xl font-bold tracking-tight">krewgrid control</div>
+            <nav className="flex flex-col gap-2 flex-1">
+              <div className="px-3 py-2 rounded-md bg-white/10 text-white font-medium text-sm cursor-pointer">Overview</div>
+              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">Disputes</div>
+              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">No-Shows</div>
+              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">Users</div>
+            </nav>
+            <button onClick={handleLogout} className="px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-red-400/10 font-medium text-sm text-left transition-colors">
+              Sign Out
+            </button>
+          </div>
+          {/* Admin Content */}
+          <div className="flex-1 overflow-auto bg-zinc-950/50">
+            <Outlet />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const path = location.pathname;
   let activeItem = "Dashboard";
