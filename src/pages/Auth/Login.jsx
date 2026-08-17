@@ -9,9 +9,9 @@ const Login = () => {
     if (role === 'admin') {
       navigate('/admin/dashboard');
     } else if (role === 'client') {
-      navigate('/client/dashboard');
+      navigate('/client/home');
     } else {
-      navigate('/worker/dashboard');
+      navigate('/worker/home');
     }
   };
 

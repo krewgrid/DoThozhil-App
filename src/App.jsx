@@ -4,6 +4,7 @@ import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 
 // Client Pages
+import ClientHome from './pages/Client/Home';
 import ClientDashboard from './pages/Client/Dashboard';
 import PostWork from './pages/Client/PostWork';
 import ClientReviews from './pages/Client/Reviews';
@@ -13,6 +14,7 @@ import ReportNoShow from './pages/Client/ReportNoShow';
 import AdminDashboard from './pages/Admin/Dashboard';
 
 // Worker Pages
+import WorkerHome from './pages/Worker/Home';
 import WorkerDashboard from './pages/Worker/Dashboard';
 import GetWork from './pages/Worker/GetWork';
 import BuySlots from './pages/Worker/BuySlots';
@@ -36,6 +38,7 @@ function App() {
 
         {/* Client Routes */}
         <Route path="/client" element={<Layout role="client" />}>
+          <Route path="home" element={<ClientHome />} />
           <Route path="dashboard" element={<ClientDashboard />} />
           <Route path="post-work" element={<PostWork />} />
           <Route path="reviews" element={<ClientReviews />} />
@@ -46,6 +49,7 @@ function App() {
 
         {/* Worker Routes */}
         <Route path="/worker" element={<Layout role="worker" />}>
+          <Route path="home" element={<WorkerHome />} />
           <Route path="dashboard" element={<WorkerDashboard />} />
           <Route path="get-work" element={<GetWork />} />
           <Route path="buy-slots" element={<BuySlots />} />
