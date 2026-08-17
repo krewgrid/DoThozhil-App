@@ -1,15 +1,10 @@
 import { ArrowLeft, Mail, Phone, Clock, MapPin } from "lucide-react"
 
-export function ContactUsView({ onBack }: { onBack: () => void }) {
+export function ContactUsView() {
   return (
-    <div className="flex w-full h-full overflow-y-auto items-start justify-center p-6 pt-28 pb-20 relative z-10">
-      <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-6 shadow-sm md:p-10 relative">
-        <button 
-          onClick={onBack}
-          className="absolute top-8 left-8 text-zinc-400 hover:text-white transition-colors z-20"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+    <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
+      <div className="w-full max-w-2xl mx-auto mt-4">
+        
 
         <div className="mt-8 relative z-10">
           <div className="mb-10 text-center">
