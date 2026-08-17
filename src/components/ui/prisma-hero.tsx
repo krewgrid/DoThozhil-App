@@ -61,15 +61,10 @@ export const PrismaHero = ({ role, activeItem, onPrimaryAction, onSignOut, onNav
   return (
     <section className="h-screen w-full p-2 md:p-4">
       <div className="relative h-full w-full overflow-hidden rounded-2xl md:rounded-[2rem]">
-        
-        {/* Background video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover"
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4"
+        {/* Background gradient */}
+        <div 
+          className="absolute inset-0 h-full w-full" 
+          style={{ background: "linear-gradient(to bottom right, #e1ddd8, #191919)" }}
         />
 
         {/* Noise overlay */}
