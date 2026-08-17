@@ -163,16 +163,45 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
   );
 }
 
-function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker") => void }) {
-  const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => { 
+function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault(); 
+    setLoading(true);
+    setErrorMsg('');
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
-    if (email) {
-      localStorage.setItem(`krewgrid_user_${email}`, "client");
+    const password = formData.get("password") as string;
+    const username = formData.get("username") as string;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username,
+          role: 'client'
+        }
+      }
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
     }
-    console.log(`UI: Client Sign Up form submitted`); 
-    onLogin("client");
+
+    let storedRole = 'client';
+    if (email === 'krewgrid.admin@gmail.com') {
+      storedRole = 'admin';
+    }
+
+    localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
+    localStorage.setItem('krewgrid_role', storedRole);
+    
+    onLogin(storedRole as "client" | "worker" | "admin");
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
@@ -180,28 +209,62 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker") =>
         <h1 className="text-3xl font-bold">Create Client account</h1>
         <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
       </div>
+      {errorMsg && (
+        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+          {errorMsg}
+        </div>
+      )}
       <div className="grid gap-4">
         <div className="grid gap-2"><Label htmlFor="email-client">Email address</Label><Input id="email-client" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
         <div className="grid gap-2"><Label htmlFor="username-client">Username</Label><Input id="username-client" name="username" type="text" defaultValue="c_" required /></div>
         <div className="grid gap-2"><Label htmlFor="contact-client">Contact number</Label><Input id="contact-client" name="contact" type="tel" defaultValue="+91 " required /></div>
         <div className="grid gap-2"><Label htmlFor="whatsapp-client">WhatsApp number</Label><Input id="whatsapp-client" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
-        <Button type="submit" className="mt-2 w-full">Sign up & verify</Button>
+        <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing Up...' : 'Sign up'}</Button>
       </div>
     </form>
   );
 }
 
-function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker") => void }) {
-  const handleSignUp = (event: React.FormEvent<HTMLFormElement>) => { 
+function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault(); 
+    setLoading(true);
+    setErrorMsg('');
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
-    if (email) {
-      localStorage.setItem(`krewgrid_user_${email}`, "worker");
+    const password = formData.get("password") as string;
+    const username = formData.get("username") as string;
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username,
+          role: 'worker'
+        }
+      }
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      setLoading(false);
+      return;
     }
-    console.log(`UI: Worker Sign Up form submitted`); 
-    onLogin("worker");
+
+    let storedRole = 'worker';
+    if (email === 'krewgrid.admin@gmail.com') {
+      storedRole = 'admin';
+    }
+
+    localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
+    localStorage.setItem('krewgrid_role', storedRole);
+    
+    onLogin(storedRole as "client" | "worker" | "admin");
   };
   return (
     <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
@@ -209,6 +272,11 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker") =>
         <h1 className="text-3xl font-bold">Create Worker account</h1>
         <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
       </div>
+      {errorMsg && (
+        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+          {errorMsg}
+        </div>
+      )}
       <div className="grid gap-4">
         <div className="grid gap-2"><Label htmlFor="email-worker">Email address</Label><Input id="email-worker" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
         <div className="grid gap-2"><Label htmlFor="username-worker">Username</Label><Input id="username-worker" name="username" type="text" defaultValue="w_" required /></div>
@@ -216,7 +284,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker") =>
         <div className="grid gap-2"><Label htmlFor="whatsapp-worker">WhatsApp number</Label><Input id="whatsapp-worker" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
         <div className="grid gap-2"><Label htmlFor="referral-worker">Referral code <span className="text-muted-foreground font-normal">(optional)</span></Label><Input id="referral-worker" name="referral" type="text" placeholder="Code" /></div>
-        <Button type="submit" className="mt-2 w-full">Sign up & verify</Button>
+        <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing Up...' : 'Sign up'}</Button>
       </div>
     </form>
   );
