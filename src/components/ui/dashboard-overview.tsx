@@ -61,8 +61,75 @@ export const DashboardMetricCard: React.FC<DashboardMetricCardProps> = ({
   );
 };
 
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
 export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => void }) => {
-  const recentWorks: any[] = [];
+  const [recentWorks, setRecentWorks] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState({
+    totalWorks: 0,
+    worksLast14Days: 0,
+    slotsLeft: 0,
+    workersHired: 0
+  });
+
+  useEffect(() => {
+    async function loadDashboard() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: worksData, error } = await supabase
+        .from('works')
+        .select(`
+          id, 
+          work_name, 
+          status, 
+          created_at, 
+          slots,
+          applications ( slots_taken, status )
+        `)
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Dashboard fetch error:", error);
+        return;
+      }
+
+      if (worksData) {
+        let hired = 0;
+        let totalSlots = 0;
+        
+        const works = worksData.map((w: any) => {
+          // Calculate slots taken for this work (only approved or pending count towards filled for now, or just all)
+          const taken = w.applications?.reduce((sum: number, app: any) => sum + (app.slots_taken || 1), 0) || 0;
+          hired += taken;
+          totalSlots += w.slots;
+
+          return {
+            id: w.id.substring(0, 8).toUpperCase(),
+            name: w.work_name,
+            status: w.status === 'open' ? 'Active' : 'Completed'
+          };
+        });
+
+        // Works in last 14 days
+        const fourteenDaysAgo = new Date();
+        fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+        const recentCount = worksData.filter((w: any) => new Date(w.created_at) > fourteenDaysAgo).length;
+
+        setMetrics({
+          totalWorks: worksData.length,
+          worksLast14Days: recentCount,
+          slotsLeft: Math.max(0, totalSlots - hired),
+          workersHired: hired
+        });
+        
+        setRecentWorks(works);
+      }
+    }
+    loadDashboard();
+  }, []);
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
@@ -84,25 +151,25 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardMetricCard
           title="Total Works Given"
-          value="0"
+          value={metrics.totalWorks.toString()}
           icon={Briefcase}
           trendType="neutral"
         />
         <DashboardMetricCard
           title="Works in Last 14 Days"
-          value="0"
+          value={metrics.worksLast14Days.toString()}
           icon={Calendar}
           trendType="neutral"
         />
         <DashboardMetricCard
-          title="Slots Left"
-          value="0"
+          title="Open Slots Left"
+          value={metrics.slotsLeft.toString()}
           icon={CheckCircle}
           trendType="neutral"
         />
         <DashboardMetricCard
-          title="Workers Hired"
-          value="0"
+          title="Workers Hired / Applied"
+          value={metrics.workersHired.toString()}
           icon={Users}
           trendType="neutral"
         />
@@ -122,7 +189,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                 ) : (
                   recentWorks.map((work) => (
                     <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer">
-                        <div className="text-zinc-400 font-mono">{work.id}</div>
+                        <div className="text-zinc-400 font-mono">WRK-{work.id}</div>
                         <div className="col-span-2 font-medium">{work.name}</div>
                         <div>
                             <span className={cn(
@@ -143,7 +210,78 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
 };
 
 export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void }) => {
-  const myWorks: any[] = [];
+  const [myWorks, setMyWorks] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState({
+    completed: 0,
+    credited: 0,
+    pending: 0,
+    rating: 0
+  });
+
+  useEffect(() => {
+    async function loadWorkerDashboard() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: appsData, error } = await supabase
+        .from('applications')
+        .select(`
+          id,
+          status,
+          created_at,
+          works (
+            work_name,
+            date_work,
+            reporting_time,
+            completion_time,
+            payment_amount
+          )
+        `)
+        .eq('worker_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Worker dashboard fetch error:", error);
+        return;
+      }
+
+      if (appsData) {
+        let completed = 0;
+        let pendingPay = 0;
+        let creditedPay = 0;
+
+        const formattedWorks = appsData.map((app: any) => {
+          const work = app.works;
+          if (!work) return null;
+
+          if (app.status === 'completed') {
+            completed++;
+            creditedPay += work.payment_amount;
+          } else {
+            pendingPay += work.payment_amount;
+          }
+
+          return {
+            id: app.id,
+            name: work.work_name,
+            date: work.date_work,
+            time: `${work.reporting_time} - ${work.completion_time}`,
+            paymentStatus: app.status === 'completed' ? 'Credited' : 'Pending'
+          };
+        }).filter(Boolean);
+
+        setMetrics({
+          completed,
+          credited: creditedPay,
+          pending: pendingPay,
+          rating: 0 // Mock for now until reviews are implemented
+        });
+
+        setMyWorks(formattedWorks);
+      }
+    }
+    loadWorkerDashboard();
+  }, []);
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
@@ -165,25 +303,25 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <DashboardMetricCard
           title="Works Completed"
-          value="0"
+          value={metrics.completed.toString()}
           icon={CheckCircle}
           trendType="neutral"
         />
         <DashboardMetricCard
           title="Credited Earnings"
-          value="₹0"
+          value={`₹${metrics.credited}`}
           icon={Wallet}
           trendType="neutral"
         />
         <DashboardMetricCard
           title="Pending Earnings"
-          value="₹0"
+          value={`₹${metrics.pending}`}
           icon={IndianRupee}
           trendType="neutral"
         />
         <DashboardMetricCard
           title="Average Rating"
-          value="0.0"
+          value={metrics.rating.toFixed(1)}
           icon={Star}
           trendType="neutral"
         />
