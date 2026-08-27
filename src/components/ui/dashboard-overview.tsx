@@ -107,7 +107,14 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           payment_amount,
           instruction,
           days,
-          applications ( slots_taken, status )
+          applications ( 
+            id, 
+            slots_taken, 
+            status,
+            photo_url,
+            co_worker_names,
+            profiles ( username, contact )
+          )
         `)
         .eq('client_id', user.id)
         .order('created_at', { ascending: false });
@@ -122,7 +129,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
         let totalSlots = 0;
         
         const works = worksData.map((w: any) => {
-          const taken = w.applications?.reduce((sum: number, app: any) => sum + (app.slots_taken || 1), 0) || 0;
+          const taken = w.applications?.reduce((sum: number, app: any) => sum + (app.status !== 'rejected' ? (app.slots_taken || 1) : 0), 0) || 0;
           hired += taken;
           totalSlots += w.slots;
 
@@ -159,6 +166,44 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     }
     loadDashboard();
   }, []);
+
+  const handleUpdateApplicant = async (appId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status })
+        .eq('id', appId);
+      
+      if (error) throw error;
+      
+      setRecentWorks(prev => prev.map(work => {
+        if (work.id === selectedWork?.id) {
+          const newApps = work.applications.map((app: any) => app.id === appId ? { ...app, status } : app);
+          const newTaken = newApps.reduce((sum: number, app: any) => sum + (app.status !== 'rejected' ? (app.slots_taken || 1) : 0), 0);
+          return {
+            ...work,
+            applications: newApps,
+            slotsTaken: newTaken
+          }
+        }
+        return work;
+      }));
+
+      setSelectedWork((prev: any) => {
+        if (!prev) return prev;
+        const newApps = prev.applications.map((app: any) => app.id === appId ? { ...app, status } : app);
+        const newTaken = newApps.reduce((sum: number, app: any) => sum + (app.status !== 'rejected' ? (app.slots_taken || 1) : 0), 0);
+        return {
+          ...prev,
+          applications: newApps,
+          slotsTaken: newTaken
+        };
+      });
+
+    } catch (err: any) {
+      alert("Failed to update status: " + err.message);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
@@ -300,9 +345,74 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                     <span className="text-zinc-400">Slots Remaining</span>
                     <span className="font-medium text-white">{selectedWork.totalSlots - selectedWork.slotsTaken}</span>
                   </div>
-                  <div className="mt-4 pt-4 border-t border-white/10 text-xs text-zinc-400 text-center">
-                    To review specific applicants, please go to the "Review Workers" tab.
-                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="flex items-center gap-2 font-semibold text-white mb-4">
+                    <Users className="w-5 h-5 text-zinc-400" /> Applicants
+                  </h3>
+                  
+                  {selectedWork.applications && selectedWork.applications.length > 0 ? (
+                    <div className="space-y-4">
+                      {selectedWork.applications.map((app: any) => (
+                        <div key={app.id} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-3">
+                              {app.photo_url ? (
+                                <img src={app.photo_url} alt="Worker" className="w-12 h-12 rounded-full object-cover border border-white/20" />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                                  <Users className="w-6 h-6 text-zinc-400" />
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-medium text-white">{app.profiles?.username || "Unknown"}</div>
+                                <div className="text-xs text-zinc-400">Slots taken: {app.slots_taken}</div>
+                                {app.status === 'approved' && app.profiles?.contact && (
+                                  <div className="text-xs text-emerald-400 mt-0.5">Contact: {app.profiles.contact}</div>
+                                )}
+                              </div>
+                            </div>
+                            <span className={cn(
+                              "px-2 py-1 rounded-full text-xs font-medium border uppercase tracking-wider",
+                              app.status === "approved" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : 
+                              app.status === "rejected" ? "bg-red-500/20 text-red-300 border-red-500/30" :
+                              "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                            )}>
+                              {app.status}
+                            </span>
+                          </div>
+
+                          {app.co_worker_names && (
+                            <div className="text-xs text-zinc-400 bg-black/40 p-2 rounded-lg mb-3">
+                              <span className="font-medium">Co-workers:</span> {app.co_worker_names}
+                            </div>
+                          )}
+
+                          {app.status === 'pending' && (
+                            <div className="flex gap-2 justify-end mt-3 border-t border-white/10 pt-3">
+                              <button 
+                                onClick={() => handleUpdateApplicant(app.id, 'rejected')}
+                                className="px-4 py-1.5 bg-red-500/10 text-red-400 text-xs font-medium rounded-md hover:bg-red-500/20 transition-colors"
+                              >
+                                Reject
+                              </button>
+                              <button 
+                                onClick={() => handleUpdateApplicant(app.id, 'approved')}
+                                className="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors"
+                              >
+                                Approve
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-6 bg-white/5 rounded-xl border border-white/10 text-zinc-400 text-sm">
+                      No applicants yet.
+                    </div>
+                  )}
                 </div>
               </div>
 
