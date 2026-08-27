@@ -116,6 +116,12 @@ export function PostWorkView() {
     setErrorMsg("")
     setSuccess(false)
 
+    if (!workName || !instruction || !slots || !days || !dateWork || !location || !reportingTime || !workDuration || !paymentAmount || !paymentCredit) {
+      setErrorMsg("All fields are required. Please fill in all the details.")
+      setLoading(false)
+      return
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
