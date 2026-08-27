@@ -390,6 +390,17 @@ function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode
 
 export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "admin") => void }) {
   const [mode, setMode] = useState<AuthMode>("signIn");
+  const [workerCount, setWorkerCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'worker');
+      if (count !== null) {
+        setWorkerCount(count);
+      }
+    }
+    fetchCount();
+  }, []);
 
   return (
     <div className="w-full min-h-screen md:grid md:grid-cols-2 relative font-sans">
@@ -418,12 +429,12 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
                 <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" alt="User" />
                 <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80" alt="User" />
                 <div className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-sm font-semibold">
-                    +10k
+                    +{workerCount}
                 </div>
             </div>
             <div className="text-center space-y-2">
                 <p className="text-2xl font-semibold text-zinc-800 dark:text-zinc-200">
-                    <Typewriter text="10,000+ users joined" speed={50} />
+                    <Typewriter text={`${workerCount} workers joined`} speed={50} />
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">Be part of the fastest growing marketplace.</p>
             </div>
