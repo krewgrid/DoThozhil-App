@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDown, ArrowUp, Minus, Briefcase, Calendar, CheckCircle, Users, Wallet, IndianRupee, Star, Ticket } from 'lucide-react';
+import { ArrowDown, ArrowUp, Minus, Briefcase, Calendar, CheckCircle, Users, Wallet, IndianRupee, Star, Ticket, MapPin, Clock, X, FileText } from 'lucide-react';
 
 type IconType = React.ElementType | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 export type TrendType = 'up' | 'down' | 'neutral';
@@ -303,7 +303,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
   );
 };
 
-import { MapPin, Calendar, Clock, IndianRupee, FileText, Users, X } from 'lucide-react';
+
 
 export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void }) => {
   const [myWorks, setMyWorks] = useState<any[]>([]);
