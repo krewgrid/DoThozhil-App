@@ -382,11 +382,17 @@ function UsersTab() {
     }
   };
 
-  const handleUnban = async (userId) => {
+  const handleUnban = async (userId, username) => {
     if (!confirm('Restore this user to their original role?')) return;
     try {
       // Determine if they were a client by checking if they ever posted a work
       let originalRole = 'worker';
+      
+      // Check prefix for test accounts
+      if (username && username.startsWith('c_')) {
+        originalRole = 'client';
+      }
+
       const { data: clientWorks } = await supabase.from('works').select('id').eq('client_id', userId).limit(1);
       
       if (clientWorks && clientWorks.length > 0) {
@@ -458,7 +464,7 @@ function UsersTab() {
                 <div className="md:col-span-2 text-zinc-400 text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
                 <div className="md:col-span-2 md:text-right">
                   {user.role === 'banned' ? (
-                    <button onClick={() => handleUnban(user.id)} className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors">
+                    <button onClick={() => handleUnban(user.id, user.username)} className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors">
                       Unban
                     </button>
                   ) : user.role !== 'admin' ? (
