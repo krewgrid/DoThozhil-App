@@ -56,8 +56,9 @@ export function GetWorkView() {
         }))
         
         setAvailableWorks(formattedWorks)
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching works:", err)
+        alert("Debug Error: " + err.message)
       } finally {
         setLoading(false)
       }
