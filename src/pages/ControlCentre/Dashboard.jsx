@@ -383,9 +383,17 @@ function UsersTab() {
   };
 
   const handleUnban = async (userId) => {
-    if (!confirm('Restore this user as a worker?')) return;
+    if (!confirm('Restore this user to their original role?')) return;
     try {
-      const { error } = await supabase.from('profiles').update({ role: 'worker' }).eq('id', userId);
+      // Determine if they were a client by checking if they ever posted a work
+      let originalRole = 'worker';
+      const { data: clientWorks } = await supabase.from('works').select('id').eq('client_id', userId).limit(1);
+      
+      if (clientWorks && clientWorks.length > 0) {
+        originalRole = 'client';
+      }
+
+      const { error } = await supabase.from('profiles').update({ role: originalRole }).eq('id', userId);
       if (error) throw error;
       loadUsers();
     } catch (err) {
