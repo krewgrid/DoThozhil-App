@@ -188,7 +188,6 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const username = formData.get("username") as string;
-    const referralInput = formData.get("referral") as string;
     
     // 1. Check if username is available
     const { data: isAvailable, error: checkError } = await supabase.rpc('check_username_available', { check_username: username });
@@ -221,12 +220,6 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       storedRole = 'admin';
     }
 
-    // 3. Generate unique referral code for this new user
-    const myReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
-    // 4. If they used a referral code, they get 5 slots. Otherwise 0.
-    const initialSlots = referralInput ? 5 : 0;
-
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
@@ -234,18 +227,11 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         username: username,
         role: storedRole,
         contact: formData.get("contact") as string,
-        whatsapp: formData.get("whatsapp") as string,
-        referral_code: myReferralCode,
-        slots: initialSlots
+        whatsapp: formData.get("whatsapp") as string
       });
       
     if (profileError) {
       console.error("Failed to create profile:", profileError);
-    }
-
-    // 5. Reward the referrer if a code was provided
-    if (referralInput) {
-      await supabase.rpc('reward_referrer', { ref_code: referralInput });
     }
 
     localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
@@ -270,7 +256,6 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <div className="grid gap-2"><Label htmlFor="contact-client">Contact number</Label><Input id="contact-client" name="contact" type="tel" defaultValue="+91 " required /></div>
         <div className="grid gap-2"><Label htmlFor="whatsapp-client">WhatsApp number</Label><Input id="whatsapp-client" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
-        <div className="grid gap-2"><Label htmlFor="referral-client">Referral Code (Optional)</Label><Input id="referral-client" name="referral" type="text" placeholder="e.g. A9X3F1" /></div>
         <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing Up...' : 'Sign up'}</Button>
       </div>
     </form>

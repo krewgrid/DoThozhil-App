@@ -138,13 +138,15 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
             </div>
           </div>
           
-          <div className="mt-8 border-t border-white/10 pt-8">
-            <h3 className="text-lg font-semibold text-white mb-2">Referral Code</h3>
-            <p className="text-sm text-zinc-400 mb-4">Share this code with friends. When they sign up, you both get 5 free slots!</p>
-            <div className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 max-w-sm">
-              <span className="text-xl text-white font-mono font-bold tracking-widest">{userDetails.referralCode}</span>
+          {userDetails.accountType === "Worker" && (
+            <div className="mt-8 border-t border-white/10 pt-8">
+              <h3 className="text-lg font-semibold text-white mb-2">Referral Code</h3>
+              <p className="text-sm text-zinc-400 mb-4">Share this code with friends. When they sign up, you both get 5 free slots!</p>
+              <div className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 max-w-sm">
+                <span className="text-xl text-white font-mono font-bold tracking-widest">{userDetails.referralCode}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-8 border-t border-white/10 pt-8">
             <h3 className="text-lg font-semibold text-white mb-4">Security</h3>
