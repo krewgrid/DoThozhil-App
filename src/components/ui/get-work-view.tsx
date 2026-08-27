@@ -15,8 +15,31 @@ export function GetWorkView() {
   // Modal State
   const [selectedWork, setSelectedWork] = useState<any | null>(null)
   const [slotsTaken, setSlotsTaken] = useState(1)
-  const [coWorkerNames, setCoWorkerNames] = useState("")
+  const [coWorkerNames, setCoWorkerNames] = useState<string[]>([])
   const [isApplying, setIsApplying] = useState(false)
+
+  // Handle slot change to resize the names array
+  const handleSlotChange = (newSlots: number) => {
+    setSlotsTaken(newSlots)
+    if (newSlots > 1) {
+      // Resize array to match (newSlots - 1)
+      setCoWorkerNames(prev => {
+        const newArr = [...prev]
+        while (newArr.length < newSlots - 1) newArr.push("")
+        return newArr.slice(0, newSlots - 1)
+      })
+    } else {
+      setCoWorkerNames([])
+    }
+  }
+
+  const handleNameChange = (index: number, value: string) => {
+    setCoWorkerNames(prev => {
+      const newArr = [...prev]
+      newArr[index] = value
+      return newArr
+    })
+  }
 
   useEffect(() => {
     async function fetchWorks() {
@@ -85,9 +108,11 @@ export function GetWorkView() {
   const submitApplication = async () => {
     if (!selectedWork) return;
 
-    if (slotsTaken > 1 && !coWorkerNames.trim()) {
-      alert("Please provide the names of your co-workers.")
-      return;
+    if (slotsTaken > 1) {
+      if (coWorkerNames.some(name => !name.trim())) {
+        alert("Please fill in the names of all your co-workers.")
+        return;
+      }
     }
 
     setIsApplying(true)
@@ -105,7 +130,7 @@ export function GetWorkView() {
           work_id: selectedWork.id,
           worker_id: user.id,
           slots_taken: slotsTaken,
-          co_worker_names: slotsTaken > 1 ? coWorkerNames : null
+          co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null
         })
 
       if (error) {
@@ -131,7 +156,7 @@ export function GetWorkView() {
   const openModal = (work: any) => {
     setSelectedWork(work)
     setSlotsTaken(1)
-    setCoWorkerNames("")
+    setCoWorkerNames([])
   }
 
   const closeModal = () => {
@@ -332,7 +357,7 @@ export function GetWorkView() {
                     </label>
                     <select
                       value={slotsTaken}
-                      onChange={(e) => setSlotsTaken(Number(e.target.value))}
+                      onChange={(e) => handleSlotChange(Number(e.target.value))}
                       className="w-full sm:w-1/2 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30"
                     >
                       {Array.from({ length: selectedWork.slots }, (_, i) => i + 1).map(num => (
@@ -343,17 +368,22 @@ export function GetWorkView() {
 
                   {slotsTaken > 1 && (
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div>
-                        <label className="block text-sm text-zinc-400 mb-2">
+                      <div className="space-y-3">
+                        <label className="block text-sm text-zinc-400">
                           Names of the other {slotsTaken - 1} worker(s)
                         </label>
-                        <textarea 
-                          value={coWorkerNames}
-                          onChange={(e) => setCoWorkerNames(e.target.value)}
-                          placeholder="e.g. John Doe, Jane Smith"
-                          className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 min-h-[80px]"
-                          required
-                        />
+                        {Array.from({ length: slotsTaken - 1 }).map((_, idx) => (
+                          <div key={idx} className="flex flex-col gap-1">
+                            <input 
+                              type="text"
+                              value={coWorkerNames[idx] || ""}
+                              onChange={(e) => handleNameChange(idx, e.target.value)}
+                              placeholder={`Worker ${idx + 1} Name`}
+                              className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30"
+                              required
+                            />
+                          </div>
+                        ))}
                       </div>
                       
                       <div className="flex gap-3 items-start bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl text-yellow-500 text-sm">
