@@ -62,11 +62,7 @@ export const DashboardMetricCard: React.FC<DashboardMetricCardProps> = ({
 };
 
 export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => void }) => {
-  const recentWorks = [
-    { id: "WRK-A1B2C", name: "Stage Setup for Concert", date: "Oct 24", status: "Active" },
-    { id: "WRK-X9Y8Z", name: "Registration Desk", date: "Oct 21", status: "Completed" },
-    { id: "WRK-M4N5P", name: "Catering Support", date: "Oct 18", status: "Completed" },
-  ];
+  const recentWorks: any[] = [];
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
@@ -88,31 +84,27 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardMetricCard
           title="Total Works Given"
-          value="24"
+          value="0"
           icon={Briefcase}
-          trendChange="+3"
-          trendType="up"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Works in Last 14 Days"
-          value="5"
+          value="0"
           icon={Calendar}
-          trendChange="+1"
-          trendType="up"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Slots Left"
-          value="12"
+          value="0"
           icon={CheckCircle}
-          trendChange="-2"
-          trendType="down"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Workers Hired"
-          value="145"
+          value="0"
           icon={Users}
-          trendChange="+18"
-          trendType="up"
+          trendType="neutral"
         />
       </div>
 
@@ -125,7 +117,10 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                 <div>Status</div>
             </div>
             <div className="flex flex-col">
-                {recentWorks.map((work) => (
+                {recentWorks.length === 0 ? (
+                  <div className="p-8 text-center text-zinc-500">No works posted yet.</div>
+                ) : (
+                  recentWorks.map((work) => (
                     <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer">
                         <div className="text-zinc-400 font-mono">{work.id}</div>
                         <div className="col-span-2 font-medium">{work.name}</div>
@@ -138,7 +133,8 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                             </span>
                         </div>
                     </div>
-                ))}
+                  ))
+                )}
             </div>
         </div>
       </div>
@@ -147,11 +143,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
 };
 
 export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void }) => {
-  const myWorks = [
-    { id: "1", name: "Stage Setup for Concert", date: "24 Oct 2026", time: "10:00 AM - 6:00 PM", paymentStatus: "Credited" },
-    { id: "2", name: "VIP Lounge Security", date: "21 Oct 2026", time: "6:00 PM - 2:00 AM", paymentStatus: "Pending" },
-    { id: "3", name: "Catering Support", date: "18 Oct 2026", time: "9:00 AM - 4:00 PM", paymentStatus: "Credited" },
-  ];
+  const myWorks: any[] = [];
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
@@ -173,37 +165,33 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <DashboardMetricCard
           title="Works Completed"
-          value="15"
+          value="0"
           icon={CheckCircle}
-          trendChange="+2"
-          trendType="up"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Credited Earnings"
-          value="₹12,500"
+          value="₹0"
           icon={Wallet}
-          trendChange="+₹1,000"
-          trendType="up"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Pending Earnings"
-          value="₹3,000"
+          value="₹0"
           icon={IndianRupee}
           trendType="neutral"
         />
         <DashboardMetricCard
           title="Average Rating"
-          value="4.8"
+          value="0.0"
           icon={Star}
-          trendChange="+0.1"
-          trendType="up"
+          trendType="neutral"
         />
         <DashboardMetricCard
           title="Available Slots"
-          value="12"
+          value="0"
           icon={Ticket}
-          trendChange="-1"
-          trendType="down"
+          trendType="neutral"
         />
       </div>
 
@@ -218,21 +206,25 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
                     <div>Payment Status</div>
                 </div>
                 <div className="flex flex-col">
-                    {myWorks.map((work) => (
-                        <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors">
-                            <div className="font-medium">{work.name}</div>
-                            <div className="text-zinc-300">{work.date}</div>
-                            <div className="text-zinc-300">{work.time}</div>
-                            <div>
-                                <span className={cn(
-                                    "px-2 py-1 rounded-full text-xs font-medium border",
-                                    work.paymentStatus === "Credited" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
-                                )}>
-                                    {work.paymentStatus}
-                                </span>
-                            </div>
-                        </div>
-                    ))}
+                    {myWorks.length === 0 ? (
+                      <div className="p-8 text-center text-zinc-500">No works joined yet.</div>
+                    ) : (
+                      myWorks.map((work) => (
+                          <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors">
+                              <div className="font-medium">{work.name}</div>
+                              <div className="text-zinc-300">{work.date}</div>
+                              <div className="text-zinc-300">{work.time}</div>
+                              <div>
+                                  <span className={cn(
+                                      "px-2 py-1 rounded-full text-xs font-medium border",
+                                      work.paymentStatus === "Credited" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                                  )}>
+                                      {work.paymentStatus}
+                                  </span>
+                              </div>
+                          </div>
+                      ))
+                    )}
                 </div>
             </div>
         </div>
