@@ -73,6 +73,7 @@ export function GetWorkView() {
             days,
             reporting_time,
             completion_time,
+            require_photo,
             profiles (
               username
             )
