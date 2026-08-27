@@ -359,12 +359,24 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
                               {app.photo_url ? (
-                                <img src={app.photo_url} alt="Worker" className="w-12 h-12 rounded-full object-cover border border-white/20" />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                                  <Users className="w-6 h-6 text-zinc-400" />
-                                </div>
-                              )}
+                                <img 
+                                  src={app.photo_url} 
+                                  alt="Worker" 
+                                  className="w-12 h-12 rounded-full object-cover border border-white/20"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    if (e.currentTarget.nextElementSibling) {
+                                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                              ) : null}
+                              <div 
+                                className="w-12 h-12 rounded-full bg-white/10 items-center justify-center"
+                                style={{ display: app.photo_url ? 'none' : 'flex' }}
+                              >
+                                <Users className="w-6 h-6 text-zinc-400" />
+                              </div>
                               <div>
                                 <div className="font-medium text-white">{app.profiles?.username || "Unknown"}</div>
                                 <div className="text-xs text-zinc-400">Slots taken: {app.slots_taken}</div>
