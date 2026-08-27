@@ -73,6 +73,8 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     workersHired: 0
   });
 
+  const [selectedWork, setSelectedWork] = useState<any | null>(null);
+
   useEffect(() => {
     async function loadDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -86,6 +88,13 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           status, 
           created_at, 
           slots,
+          location,
+          date_work,
+          reporting_time,
+          completion_time,
+          payment_amount,
+          instruction,
+          days,
           applications ( slots_taken, status )
         `)
         .eq('client_id', user.id)
@@ -101,7 +110,6 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
         let totalSlots = 0;
         
         const works = worksData.map((w: any) => {
-          // Calculate slots taken for this work (only approved or pending count towards filled for now, or just all)
           const taken = w.applications?.reduce((sum: number, app: any) => sum + (app.slots_taken || 1), 0) || 0;
           hired += taken;
           totalSlots += w.slots;
@@ -109,11 +117,20 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           return {
             id: w.id.substring(0, 8).toUpperCase(),
             name: w.work_name,
-            status: w.status === 'open' ? 'Active' : 'Completed'
+            status: w.status === 'open' ? 'Active' : 'Completed',
+            // Full details
+            location: w.location,
+            date: w.date_work,
+            time: `${w.reporting_time} - ${w.completion_time}`,
+            payment: w.payment_amount,
+            instruction: w.instruction,
+            days: w.days,
+            totalSlots: w.slots,
+            slotsTaken: taken,
+            applications: w.applications
           };
         });
 
-        // Works in last 14 days
         const fourteenDaysAgo = new Date();
         fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
         const recentCount = worksData.filter((w: any) => new Date(w.created_at) > fourteenDaysAgo).length;
@@ -188,7 +205,11 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                   <div className="p-8 text-center text-zinc-500">No works posted yet.</div>
                 ) : (
                   recentWorks.map((work) => (
-                    <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer">
+                    <div 
+                      key={work.id} 
+                      onClick={() => setSelectedWork(work)}
+                      className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer"
+                    >
                         <div className="text-zinc-400 font-mono">WRK-{work.id}</div>
                         <div className="col-span-2 font-medium">{work.name}</div>
                         <div>
@@ -205,9 +226,84 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
             </div>
         </div>
       </div>
+
+      {/* View Work Modal (Client Side) */}
+      {selectedWork && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-2xl font-bold text-white">{selectedWork.name}</h2>
+                <p className="text-sm text-zinc-400">ID: WRK-{selectedWork.id}</p>
+              </div>
+              <button onClick={() => setSelectedWork(null)} className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <MapPin className="w-4 h-4" /> Location
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.location}</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Calendar className="w-4 h-4" /> Date & Days
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.date} • {selectedWork.days} Day(s)</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Clock className="w-4 h-4" /> Timing
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.time}</div>
+                </div>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-emerald-400 mb-1">
+                    <IndianRupee className="w-4 h-4" /> Payment
+                  </div>
+                  <div className="font-bold text-lg text-emerald-400">₹{selectedWork.payment}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 pt-8">
+                <h3 className="flex items-center gap-2 font-semibold text-white mb-4">
+                  <Users className="w-5 h-5 text-zinc-400" /> Slots Status
+                </h3>
+                <div className="bg-white/5 p-4 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400">Total Slots</span>
+                    <span className="font-medium text-white">{selectedWork.totalSlots}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400">Slots Filled</span>
+                    <span className="font-medium text-white">{selectedWork.slotsTaken}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400">Slots Remaining</span>
+                    <span className="font-medium text-white">{selectedWork.totalSlots - selectedWork.slotsTaken}</span>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-white/10 text-xs text-zinc-400 text-center">
+                    To review specific applicants, please go to the "Review Workers" tab.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
+
+import { MapPin, Calendar, Clock, IndianRupee, FileText, Users, X } from 'lucide-react';
 
 export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void }) => {
   const [myWorks, setMyWorks] = useState<any[]>([]);
@@ -217,6 +313,8 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
     pending: 0,
     rating: 0
   });
+
+  const [selectedWork, setSelectedWork] = useState<any | null>(null);
 
   useEffect(() => {
     async function loadWorkerDashboard() {
@@ -228,13 +326,20 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
         .select(`
           id,
           status,
+          slots_taken,
+          co_worker_names,
           created_at,
           works (
             work_name,
             date_work,
             reporting_time,
             completion_time,
-            payment_amount
+            payment_amount,
+            location,
+            instruction,
+            days,
+            slots,
+            profiles ( username )
           )
         `)
         .eq('worker_id', user.id)
@@ -266,7 +371,16 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
             name: work.work_name,
             date: work.date_work,
             time: `${work.reporting_time} - ${work.completion_time}`,
-            paymentStatus: app.status === 'completed' ? 'Credited' : 'Pending'
+            paymentStatus: app.status === 'completed' ? 'Credited' : 'Pending',
+            // Full details for modal
+            location: work.location,
+            instruction: work.instruction,
+            days: work.days,
+            payment: work.payment_amount,
+            client: work.profiles?.username || 'Unknown Client',
+            slotsTaken: app.slots_taken,
+            coWorkerNames: app.co_worker_names,
+            applicationStatus: app.status
           };
         }).filter(Boolean);
 
@@ -348,7 +462,11 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
                       <div className="p-8 text-center text-zinc-500">No works joined yet.</div>
                     ) : (
                       myWorks.map((work) => (
-                          <div key={work.id} className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors">
+                          <div 
+                            key={work.id} 
+                            onClick={() => setSelectedWork(work)}
+                            className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer"
+                          >
                               <div className="font-medium">{work.name}</div>
                               <div className="text-zinc-300">{work.date}</div>
                               <div className="text-zinc-300">{work.time}</div>
@@ -367,6 +485,91 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
             </div>
         </div>
       </div>
+
+      {/* View Work Modal */}
+      {selectedWork && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-2xl font-bold text-white">{selectedWork.name}</h2>
+                <p className="text-sm text-zinc-400">Posted by {selectedWork.client}</p>
+              </div>
+              <button onClick={() => setSelectedWork(null)} className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <MapPin className="w-4 h-4" /> Location
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.location}</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Calendar className="w-4 h-4" /> Date & Days
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.date} • {selectedWork.days} Day(s)</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Clock className="w-4 h-4" /> Timing
+                  </div>
+                  <div className="font-medium text-white">{selectedWork.time}</div>
+                </div>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-emerald-400 mb-1">
+                    <IndianRupee className="w-4 h-4" /> Payment
+                  </div>
+                  <div className="font-bold text-lg text-emerald-400">₹{selectedWork.payment}</div>
+                </div>
+              </div>
+
+              {selectedWork.instruction && (
+                <div>
+                  <h3 className="flex items-center gap-2 font-semibold text-white mb-3">
+                    <FileText className="w-5 h-5 text-zinc-400" /> Instructions
+                  </h3>
+                  <div className="bg-white/5 p-4 rounded-xl text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                    {selectedWork.instruction}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t border-white/10 pt-8">
+                <h3 className="flex items-center gap-2 font-semibold text-white mb-4">
+                  <Users className="w-5 h-5 text-zinc-400" /> Your Application
+                </h3>
+                <div className="bg-white/5 p-4 rounded-xl space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400">Status</span>
+                    <span className="capitalize font-bold text-white">{selectedWork.applicationStatus}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-zinc-400">Slots Claimed</span>
+                    <span className="font-medium text-white">{selectedWork.slotsTaken}</span>
+                  </div>
+                  {selectedWork.slotsTaken > 1 && (
+                    <div className="flex justify-between items-start text-sm pt-2 border-t border-white/10">
+                      <span className="text-zinc-400">Co-workers</span>
+                      <span className="font-medium text-white text-right max-w-[60%]">{selectedWork.coWorkerNames}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
