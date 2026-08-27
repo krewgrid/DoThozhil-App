@@ -82,7 +82,8 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     totalWorks: 0,
     worksLast14Days: 0,
     slotsLeft: 0,
-    workersHired: 0
+    workersHired: 0,
+    avgRating: null as number | null
   });
 
   const [selectedWork, setSelectedWork] = useState<any | null>(null);
@@ -91,6 +92,16 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     async function loadDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch client's average rating
+      const { data: clientReviews } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('reviewee_id', user.id)
+      
+      const avgRating = clientReviews && clientReviews.length > 0
+        ? Math.round(clientReviews.reduce((s: number, r: any) => s + r.rating, 0) / clientReviews.length * 10) / 10
+        : null;
 
       const { data: worksData, error } = await supabase
         .from('works')
@@ -107,8 +118,10 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           payment_amount,
           instruction,
           days,
+          require_approval,
           applications ( 
             id, 
+            worker_id,
             slots_taken, 
             status,
             photo_url,
@@ -146,7 +159,8 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
             days: w.days,
             totalSlots: w.slots,
             slotsTaken: taken,
-            applications: w.applications
+            applications: w.applications,
+            requireApproval: w.require_approval
           };
         });
 
@@ -158,7 +172,8 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           totalWorks: worksData.length,
           worksLast14Days: recentCount,
           slotsLeft: Math.max(0, totalSlots - hired),
-          workersHired: hired
+          workersHired: hired,
+          avgRating
         });
         
         setRecentWorks(works);
@@ -166,6 +181,36 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     }
     loadDashboard();
   }, []);
+
+  const [workerRatings, setWorkerRatings] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    async function fetchWorkerRatings() {
+      if (!selectedWork?.applications) return;
+      const workerIds = selectedWork.applications.map((a: any) => a.worker_id).filter(Boolean);
+      if (workerIds.length === 0) return;
+      
+      const { data } = await supabase
+        .from('reviews')
+        .select('reviewee_id, rating')
+        .in('reviewee_id', workerIds);
+      
+      if (data) {
+        const sums: Record<string, { total: number; count: number }> = {};
+        data.forEach((r: any) => {
+          if (!sums[r.reviewee_id]) sums[r.reviewee_id] = { total: 0, count: 0 };
+          sums[r.reviewee_id].total += r.rating;
+          sums[r.reviewee_id].count++;
+        });
+        const ratings: Record<string, number> = {};
+        Object.keys(sums).forEach(id => {
+          ratings[id] = Math.round((sums[id].total / sums[id].count) * 10) / 10;
+        });
+        setWorkerRatings(ratings);
+      }
+    }
+    fetchWorkerRatings();
+  }, [selectedWork]);
 
   const handleUpdateApplicant = async (appId: string, status: string) => {
     try {
@@ -247,6 +292,14 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
           icon={Users}
           trendType="neutral"
         />
+        {metrics.avgRating !== null && (
+          <DashboardMetricCard
+            title="Your Rating"
+            value={`${metrics.avgRating} ★`}
+            icon={Star}
+            trendType="neutral"
+          />
+        )}
       </div>
 
       <div className="mt-8">
@@ -378,7 +431,14 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                                 <Users className="w-6 h-6 text-zinc-400" />
                               </div>
                               <div>
-                                <div className="font-medium text-white">{app.profiles?.username || "Unknown"}</div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-white">{app.profiles?.username || "Unknown"}</span>
+                                  {workerRatings[app.worker_id] && (
+                                    <span className="flex items-center gap-0.5 text-xs text-yellow-400">
+                                      <Star className="w-3 h-3 fill-yellow-400" />{workerRatings[app.worker_id]}
+                                    </span>
+                                  )}
+                                </div>
                                 <div className="text-xs text-zinc-400">Slots taken: {app.slots_taken}</div>
                                 {app.status === 'approved' && app.profiles?.contact && (
                                   <div className="text-xs text-emerald-400 mt-0.5">Contact: {app.profiles.contact}</div>
@@ -395,13 +455,9 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                             </span>
                           </div>
 
-                          {app.co_worker_names && (
-                            <div className="text-xs text-zinc-400 bg-black/40 p-2 rounded-lg mb-3">
-                              <span className="font-medium">Co-workers:</span> {app.co_worker_names}
-                            </div>
-                          )}
 
-                          {app.status === 'pending' && (
+
+                          {app.status === 'pending' && selectedWork.requireApproval && (
                             <div className="flex gap-2 justify-end mt-3 border-t border-white/10 pt-3">
                               <button 
                                 onClick={() => handleUpdateApplicant(app.id, 'rejected')}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check, X, Clock, FileText, AlertTriangle, Users } from "lucide-react"
+import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check, X, Clock, FileText, AlertTriangle, Users, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 
@@ -74,6 +74,8 @@ export function GetWorkView() {
             reporting_time,
             completion_time,
             require_photo,
+            require_approval,
+            client_id,
             profiles (
               username
             )
@@ -81,6 +83,28 @@ export function GetWorkView() {
           .eq('status', 'open')
 
         if (worksError) throw worksError
+
+        // Fetch client ratings
+        const clientIds = [...new Set((worksData || []).map((w: any) => w.client_id))]
+        const clientRatings: Record<string, number> = {}
+        if (clientIds.length > 0) {
+          const { data: reviewsData } = await supabase
+            .from('reviews')
+            .select('reviewee_id, rating')
+            .in('reviewee_id', clientIds)
+          
+          if (reviewsData) {
+            const sums: Record<string, { total: number, count: number }> = {}
+            reviewsData.forEach((r: any) => {
+              if (!sums[r.reviewee_id]) sums[r.reviewee_id] = { total: 0, count: 0 }
+              sums[r.reviewee_id].total += r.rating
+              sums[r.reviewee_id].count++
+            })
+            Object.keys(sums).forEach(id => {
+              clientRatings[id] = Math.round((sums[id].total / sums[id].count) * 10) / 10
+            })
+          }
+        }
 
         // Fetch user's applications to know what they already applied to
         if (user) {
@@ -117,7 +141,9 @@ export function GetWorkView() {
           days: w.days,
           reportingTime: formatTime12Hour(w.reporting_time),
           completionTime: w.completion_time,
-          requirePhoto: w.require_photo
+          requirePhoto: w.require_photo,
+          requireApproval: w.require_approval,
+          clientRating: clientRatings[w.client_id] || null
         }))
         
         setAvailableWorks(formattedWorks)
@@ -208,6 +234,23 @@ export function GetWorkView() {
           throw error
         }
       } else {
+        // If no approval required, auto-approve the application
+        if (!selectedWork.requireApproval) {
+          const { data: insertedApp } = await supabase
+            .from('applications')
+            .select('id')
+            .eq('work_id', selectedWork.id)
+            .eq('worker_id', user.id)
+            .single()
+          
+          if (insertedApp) {
+            await supabase
+              .from('applications')
+              .update({ status: 'approved' })
+              .eq('id', insertedApp.id)
+          }
+        }
+
         // Deduct slots from worker's profile
         const newSlots = workerSlots - slotsTaken
         await supabase
@@ -325,7 +368,14 @@ export function GetWorkView() {
                 <div className="flex flex-col gap-2">
                   <div>
                     <h3 className="text-lg font-bold text-white">{work.name}</h3>
-                    <p className="text-xs text-zinc-400 font-medium">{work.client}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-zinc-400 font-medium">{work.client}</p>
+                      {work.clientRating && (
+                        <span className="flex items-center gap-0.5 text-xs text-yellow-400">
+                          <Star className="w-3 h-3 fill-yellow-400" />{work.clientRating}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-300">
                     <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-zinc-500" /> {work.location}</span>
