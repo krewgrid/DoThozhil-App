@@ -348,7 +348,7 @@ export function GetWorkView() {
                   <div className="flex items-center gap-2 text-zinc-400 mb-1">
                     <Clock className="w-4 h-4" /> Timing
                   </div>
-                  <div className="font-medium">{selectedWork.reportingTime} - {selectedWork.completionTime}</div>
+                  <div className="font-medium">{selectedWork.reportingTime} • {selectedWork.completionTime}</div>
                 </div>
                 <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
                   <div className="flex items-center gap-2 text-emerald-400 mb-1">

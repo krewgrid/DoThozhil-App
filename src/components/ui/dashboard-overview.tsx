@@ -121,7 +121,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
             // Full details
             location: w.location,
             date: w.date_work,
-            time: `${w.reporting_time} - ${w.completion_time}`,
+            time: `${w.reporting_time} • ${w.completion_time}`,
             payment: w.payment_amount,
             instruction: w.instruction,
             days: w.days,
@@ -378,7 +378,7 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
             id: app.id,
             name: work.work_name,
             date: work.date_work,
-            time: `${work.reporting_time} - ${work.completion_time}`,
+            time: `${work.reporting_time} • ${work.completion_time}`,
             paymentStatus: app.status === 'completed' ? 'Credited' : 'Pending',
             // Full details for modal
             location: work.location,

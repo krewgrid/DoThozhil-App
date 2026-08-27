@@ -31,7 +31,7 @@ export function PostWorkView() {
   const [dateWork, setDateWork] = useState("")
   const [location, setLocation] = useState("")
   const [reportingTime, setReportingTime] = useState("")
-  const [completionTime, setCompletionTime] = useState("")
+    const [workDuration, setWorkDuration] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [paymentCredit, setPaymentCredit] = useState("")
 
@@ -55,7 +55,7 @@ export function PostWorkView() {
         date_work: dateWork,
         location: location,
         reporting_time: reportingTime,
-        completion_time: completionTime,
+        completion_time: workDuration ? `${workDuration} hrs` : "",
         payment_amount: parseFloat(paymentAmount) || 0,
         payment_credit: paymentCredit,
         require_photo: requirePhoto,
@@ -73,7 +73,7 @@ export function PostWorkView() {
       setDateWork("")
       setLocation("")
       setReportingTime("")
-      setCompletionTime("")
+      setWorkDuration("")
       setPaymentAmount("")
       setPaymentCredit("")
       setRequirePhoto(false)
@@ -134,25 +134,25 @@ export function PostWorkView() {
                 </FieldContent>
               </Field>
               <Field>
-                <FieldLabel htmlFor="date-work">Date(s) of Work</FieldLabel>
+                <FieldLabel htmlFor="date-work">Date of Work</FieldLabel>
                 <FieldContent>
-                  <Input id="date-work" value={dateWork} onChange={(e) => setDateWork(e.target.value)} placeholder="e.g. 24 Oct - 26 Oct" />
+                  <Input id="date-work" value={dateWork} onChange={(e) => setDateWork(e.target.value)} type="date" />
                 </FieldContent>
               </Field>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
                 <Field>
-                    <FieldLabel htmlFor="reporting-time">Reporting Time</FieldLabel>
+                    <FieldLabel htmlFor="reporting-time">Starting Time</FieldLabel>
                     <FieldContent>
                     <Input id="reporting-time" value={reportingTime} onChange={(e) => setReportingTime(e.target.value)} type="time" />
                     </FieldContent>
                 </Field>
 
                 <Field>
-                    <FieldLabel htmlFor="completion-time">Completion Time</FieldLabel>
+                    <FieldLabel htmlFor="work-duration">Work Duration (Hours)</FieldLabel>
                     <FieldContent>
-                    <Input id="completion-time" value={completionTime} onChange={(e) => setCompletionTime(e.target.value)} type="time" />
+                    <Input id="work-duration" value={workDuration} onChange={(e) => setWorkDuration(e.target.value)} type="number" placeholder="e.g. 5" />
                     </FieldContent>
                 </Field>
             </div>
