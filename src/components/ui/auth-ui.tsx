@@ -454,24 +454,15 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
         <AuthFormContainer mode={mode} setMode={setMode} onLogin={onLogin} />
       </div>
 
-      {/* Right Side Fill Grey */}
-      <div className="hidden md:flex relative bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-in-out items-center justify-center flex-col">
+      {/* Right Side Fill Green Gradient */}
+      <div className="hidden md:flex relative bg-gradient-to-br from-emerald-400 to-emerald-900 transition-all duration-500 ease-in-out items-center justify-center flex-col">
         {isCountLoaded && (
         <div className="flex flex-col items-center justify-center space-y-6">
-            <div className="flex -space-x-3">
-                <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User" />
-                <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80" alt="User" />
-                <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80" alt="User" />
-                <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80" alt="User" />
-                <div className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-sm font-semibold">
-                    +{workerCount}
-                </div>
-            </div>
             <div className="text-center space-y-2">
-                <p className="text-2xl font-semibold text-zinc-800 dark:text-zinc-200">
+                <p className="text-3xl font-bold text-white drop-shadow-sm">
                     <Typewriter key={workerCount} text={`${workerCount} workers joined`} speed={50} />
                 </p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">Be part of the fastest growing marketplace.</p>
+                <p className="text-lg text-white/80 font-medium">Be part of the fastest growing marketplace.</p>
             </div>
         </div>
         )}
