@@ -422,6 +422,7 @@ function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode
 export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "admin") => void }) {
   const [mode, setMode] = useState<AuthMode>("signIn");
   const [workerCount, setWorkerCount] = useState(0);
+  const [isCountLoaded, setIsCountLoaded] = useState(false);
 
   useEffect(() => {
     async function fetchCount() {
@@ -430,6 +431,7 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
       if (!error && data !== null) {
         setWorkerCount(data);
       }
+      setIsCountLoaded(true);
     }
     fetchCount();
   }, []);
@@ -454,6 +456,7 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
 
       {/* Right Side Fill Grey */}
       <div className="hidden md:flex relative bg-zinc-100 dark:bg-zinc-900 transition-all duration-500 ease-in-out items-center justify-center flex-col">
+        {isCountLoaded && (
         <div className="flex flex-col items-center justify-center space-y-6">
             <div className="flex -space-x-3">
                 <img className="w-14 h-14 rounded-full border-2 border-white dark:border-zinc-900 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" alt="User" />
@@ -466,12 +469,13 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
             </div>
             <div className="text-center space-y-2">
                 <p className="text-2xl font-semibold text-zinc-800 dark:text-zinc-200">
-                    <Typewriter text={`${workerCount} workers joined`} speed={50} />
+                    <Typewriter key={workerCount} text={`${workerCount} workers joined`} speed={50} />
                 </p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">Be part of the fastest growing marketplace.</p>
             </div>
         </div>
+        )}
       </div>
     </div>
-  );
+  )
 }
