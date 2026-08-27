@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check } from "lucide-react"
+import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check, X, Clock, FileText, AlertTriangle, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 
@@ -12,12 +12,18 @@ export function GetWorkView() {
   const [appliedWorkIds, setAppliedWorkIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
+  // Modal State
+  const [selectedWork, setSelectedWork] = useState<any | null>(null)
+  const [slotsTaken, setSlotsTaken] = useState(1)
+  const [coWorkerNames, setCoWorkerNames] = useState("")
+  const [isApplying, setIsApplying] = useState(false)
+
   useEffect(() => {
     async function fetchWorks() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         
-        // Fetch open works with client username
+        // Fetch open works with client username and all details
         const { data: worksData, error: worksError } = await supabase
           .from('works')
           .select(`
@@ -26,6 +32,11 @@ export function GetWorkView() {
             location,
             date_work,
             payment_amount,
+            slots,
+            instruction,
+            days,
+            reporting_time,
+            completion_time,
             profiles (
               username
             )
@@ -52,7 +63,12 @@ export function GetWorkView() {
           client: w.profiles?.username || "Unknown Client",
           location: w.location,
           date: w.date_work,
-          payment: w.payment_amount
+          payment: w.payment_amount,
+          slots: w.slots,
+          instruction: w.instruction,
+          days: w.days,
+          reportingTime: w.reporting_time,
+          completionTime: w.completion_time
         }))
         
         setAvailableWorks(formattedWorks)
@@ -66,31 +82,60 @@ export function GetWorkView() {
     fetchWorks()
   }, [])
 
-  const handleApply = async (workId: string) => {
+  const submitApplication = async () => {
+    if (!selectedWork) return;
+
+    if (slotsTaken > 1 && !coWorkerNames.trim()) {
+      alert("Please provide the names of your co-workers.")
+      return;
+    }
+
+    setIsApplying(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return alert("Please log in to apply.")
+      if (!user) {
+        alert("Please log in to apply.")
+        setIsApplying(false)
+        return
+      }
 
       const { error } = await supabase
         .from('applications')
         .insert({
-          work_id: workId,
-          worker_id: user.id
+          work_id: selectedWork.id,
+          worker_id: user.id,
+          slots_taken: slotsTaken,
+          co_worker_names: slotsTaken > 1 ? coWorkerNames : null
         })
 
       if (error) {
         if (error.code === '23505') { // Unique constraint violation
           alert("You have already applied for this work.")
+        } else if (error.code === '42703') { // Column does not exist
+          alert("Database needs update. Please run the provided SQL script to add slots_taken and co_worker_names columns.")
         } else {
           throw error
         }
+      } else {
+        setAppliedWorkIds(prev => new Set(prev).add(selectedWork.id))
+        closeModal()
       }
-
-      setAppliedWorkIds(prev => new Set(prev).add(workId))
     } catch (err: any) {
       console.error("Apply error:", err)
       alert("Failed to apply: " + err.message)
+    } finally {
+      setIsApplying(false)
     }
+  }
+
+  const openModal = (work: any) => {
+    setSelectedWork(work)
+    setSlotsTaken(1)
+    setCoWorkerNames("")
+  }
+
+  const closeModal = () => {
+    setSelectedWork(null)
   }
 
   // Extract unique locations for the filter
@@ -100,18 +145,15 @@ export function GetWorkView() {
   const filteredAndSortedWorks = useMemo(() => {
     let result = [...availableWorks]
 
-    // 1. Filter by Name
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(w => w.name.toLowerCase().includes(q))
     }
 
-    // 2. Filter by Location
     if (locationFilter !== "All") {
       result = result.filter(w => w.location === locationFilter)
     }
 
-    // 3. Sort
     if (sortBy === "nearestDate") {
       result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     } else if (sortBy === "highPayment") {
@@ -124,8 +166,6 @@ export function GetWorkView() {
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
       <div className="w-full max-w-5xl mx-auto mt-4">
-        
-
         <div className="relative z-10 flex-shrink-0">
           <div className="text-center mb-8 pl-12 md:pl-0">
             <h1 className="text-3xl font-bold text-white mb-2">Available Works</h1>
@@ -203,7 +243,7 @@ export function GetWorkView() {
                       <Check className="w-4 h-4" /> Applied
                     </button>
                   ) : (
-                    <button onClick={() => handleApply(work.id)} className="px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-transform hover:scale-105 active:scale-95">
+                    <button onClick={() => openModal(work)} className="px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-transform hover:scale-105 active:scale-95">
                       Apply Now
                     </button>
                   )}
@@ -220,6 +260,137 @@ export function GetWorkView() {
           </div>
         </div>
       </div>
+
+      {/* Application Modal */}
+      {selectedWork && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div>
+                <h2 className="text-2xl font-bold text-white">{selectedWork.name}</h2>
+                <p className="text-sm text-zinc-400">Posted by {selectedWork.client}</p>
+              </div>
+              <button onClick={closeModal} className="p-2 text-zinc-400 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar">
+              
+              {/* Job Details Section */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <MapPin className="w-4 h-4" /> Location
+                  </div>
+                  <div className="font-medium">{selectedWork.location}</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Calendar className="w-4 h-4" /> Date & Days
+                  </div>
+                  <div className="font-medium">{selectedWork.date} • {selectedWork.days} Day(s)</div>
+                </div>
+                <div className="bg-white/5 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
+                    <Clock className="w-4 h-4" /> Timing
+                  </div>
+                  <div className="font-medium">{selectedWork.reportingTime} - {selectedWork.completionTime}</div>
+                </div>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl">
+                  <div className="flex items-center gap-2 text-emerald-400 mb-1">
+                    <IndianRupee className="w-4 h-4" /> Payment
+                  </div>
+                  <div className="font-bold text-lg text-emerald-400">₹{selectedWork.payment}</div>
+                </div>
+              </div>
+
+              {selectedWork.instruction && (
+                <div>
+                  <h3 className="flex items-center gap-2 font-semibold text-white mb-3">
+                    <FileText className="w-5 h-5 text-zinc-400" /> Instructions
+                  </h3>
+                  <div className="bg-white/5 p-4 rounded-xl text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                    {selectedWork.instruction}
+                  </div>
+                </div>
+              )}
+
+              {/* Slot Selection Section */}
+              <div className="border-t border-white/10 pt-8">
+                <h3 className="flex items-center gap-2 font-semibold text-white mb-4">
+                  <Users className="w-5 h-5 text-zinc-400" /> Application Details
+                </h3>
+                
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm text-zinc-400 mb-2">
+                      How many slots do you want to take? (Max: {selectedWork.slots})
+                    </label>
+                    <select
+                      value={slotsTaken}
+                      onChange={(e) => setSlotsTaken(Number(e.target.value))}
+                      className="w-full sm:w-1/2 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30"
+                    >
+                      {Array.from({ length: selectedWork.slots }, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num} className="bg-zinc-900">{num} Slot{num > 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {slotsTaken > 1 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div>
+                        <label className="block text-sm text-zinc-400 mb-2">
+                          Names of the other {slotsTaken - 1} worker(s)
+                        </label>
+                        <textarea 
+                          value={coWorkerNames}
+                          onChange={(e) => setCoWorkerNames(e.target.value)}
+                          placeholder="e.g. John Doe, Jane Smith"
+                          className="w-full p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 min-h-[80px]"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="flex gap-3 items-start bg-yellow-500/10 border border-yellow-500/20 p-4 rounded-xl text-yellow-500 text-sm">
+                        <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                        <p className="leading-relaxed">
+                          <strong>Responsibility Disclaimer:</strong> By claiming multiple slots, you confirm that you are bringing {slotsTaken - 1} additional worker(s). It is solely your responsibility to ensure that they arrive on time and complete the work correctly. Any no-shows or disputes from your team will affect your profile rating.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-black/20">
+              <button 
+                onClick={closeModal}
+                className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white hover:bg-white/10 transition-colors"
+                disabled={isApplying}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitApplication}
+                disabled={isApplying}
+                className="px-6 py-2.5 rounded-xl text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isApplying ? "Applying..." : "Confirm Application"}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
