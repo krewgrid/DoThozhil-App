@@ -4,6 +4,18 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDown, ArrowUp, Minus, Briefcase, Calendar, CheckCircle, Users, Wallet, IndianRupee, Star, Ticket, MapPin, Clock, X, FileText } from 'lucide-react';
 
+function formatTime12Hour(timeStr: string) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return timeStr;
+  let hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
 type IconType = React.ElementType | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 export type TrendType = 'up' | 'down' | 'neutral';
 
@@ -121,7 +133,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
             // Full details
             location: w.location,
             date: w.date_work,
-            time: `${w.reporting_time} • ${w.completion_time}`,
+            time: `${formatTime12Hour(w.reporting_time)} • ${w.completion_time}`,
             payment: w.payment_amount,
             instruction: w.instruction,
             days: w.days,
@@ -378,7 +390,7 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
             id: app.id,
             name: work.work_name,
             date: work.date_work,
-            time: `${work.reporting_time} • ${work.completion_time}`,
+            time: `${formatTime12Hour(work.reporting_time)} • ${work.completion_time}`,
             paymentStatus: app.status === 'completed' ? 'Credited' : 'Pending',
             // Full details for modal
             location: work.location,

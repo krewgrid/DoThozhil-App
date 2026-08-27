@@ -3,6 +3,18 @@ import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Ch
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 
+function formatTime12Hour(timeStr: string) {
+  if (!timeStr) return "";
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return timeStr;
+  let hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  return `${hour}:${minute} ${ampm}`;
+}
+
 export function GetWorkView() {
   const [searchQuery, setSearchQuery] = useState("")
   const [locationFilter, setLocationFilter] = useState("All")
@@ -102,7 +114,7 @@ export function GetWorkView() {
           slots: w.slots,
           instruction: w.instruction,
           days: w.days,
-          reportingTime: w.reporting_time,
+          reportingTime: formatTime12Hour(w.reporting_time),
           completionTime: w.completion_time
         }))
         
