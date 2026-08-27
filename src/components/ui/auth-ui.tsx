@@ -198,6 +198,21 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       storedRole = 'admin';
     }
 
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user?.id,
+        username: username,
+        role: storedRole,
+        contact: formData.get("contact") as string,
+        whatsapp: formData.get("whatsapp") as string
+      });
+      
+    if (profileError) {
+      console.error("Failed to create profile:", profileError);
+      // Non-blocking error for now
+    }
+
     localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
     localStorage.setItem('krewgrid_role', storedRole);
     
@@ -259,6 +274,20 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
     let storedRole = 'worker';
     if (email === 'krewgrid.admin@gmail.com') {
       storedRole = 'admin';
+    }
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: data.user?.id,
+        username: username,
+        role: storedRole,
+        contact: formData.get("contact") as string,
+        whatsapp: formData.get("whatsapp") as string
+      });
+
+    if (profileError) {
+      console.error("Failed to create profile:", profileError);
     }
 
     localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
