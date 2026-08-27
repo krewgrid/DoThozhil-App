@@ -5,17 +5,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   const stats = [
-    { label: "Open Disputes", value: "12", icon: <Scale className="w-5 h-5 text-zinc-400" /> },
-    { label: "Pending No-Shows", value: "5", icon: <AlertTriangle className="w-5 h-5 text-amber-500" /> },
-    { label: "Banned Users", value: "24", icon: <Ban className="w-5 h-5 text-red-500" /> },
-    { label: "Active Users", value: "1,204", icon: <Users className="w-5 h-5 text-zinc-400" /> },
+    { label: "Open Disputes", value: "0", icon: <Scale className="w-5 h-5 text-zinc-400" /> },
+    { label: "Pending No-Shows", value: "0", icon: <AlertTriangle className="w-5 h-5 text-amber-500" /> },
+    { label: "Banned Users", value: "0", icon: <Ban className="w-5 h-5 text-red-500" /> },
+    { label: "Active Users", value: "0", icon: <Users className="w-5 h-5 text-zinc-400" /> },
   ];
 
-  const recentActivity = [
-    { type: "dispute", user: "Client #842", target: "Worker #109", reason: "Unsatisfactory work", time: "10 mins ago" },
-    { type: "no-show", user: "Client #221", target: "Worker #55", reason: "Did not arrive", time: "1 hour ago" },
-    { type: "dispute", user: "Worker #44", target: "Client #12", reason: "Payment withheld", time: "3 hours ago" },
-  ];
+  const recentActivity = [];
 
   return (
     <div className="p-8 max-w-7xl mx-auto flex flex-col gap-8 h-full">

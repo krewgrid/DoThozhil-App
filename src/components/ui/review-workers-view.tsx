@@ -2,25 +2,9 @@ import { useState } from "react"
 import { ArrowLeft, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const works = [
-  { id: "WRK-A1B2C", name: "Stage Setup for Concert", date: "Oct 24", completed: true },
-  { id: "WRK-X9Y8Z", name: "Registration Desk", date: "Oct 21", completed: true },
-  { id: "WRK-M4N5P", name: "Catering Support", date: "Oct 18", completed: true },
-]
+const works = []
 
-const workersByWork: Record<string, any[]> = {
-  "WRK-A1B2C": [
-    { id: "W1", name: "Aman Singh", avatar: "https://i.pravatar.cc/150?u=a" },
-    { id: "W2", name: "Priya Patel", avatar: "https://i.pravatar.cc/150?u=b" }
-  ],
-  "WRK-X9Y8Z": [
-    { id: "W3", name: "Rahul Kumar", avatar: "https://i.pravatar.cc/150?u=c" }
-  ],
-  "WRK-M4N5P": [
-    { id: "W4", name: "Neha Gupta", avatar: "https://i.pravatar.cc/150?u=d" },
-    { id: "W5", name: "Vikram Sharma", avatar: "https://i.pravatar.cc/150?u=e" }
-  ]
-}
+const workersByWork: Record<string, any[]> = {}
 
 function StarRating({ rating, setRating }: { rating: number, setRating: (r: number) => void }) {
   const [hover, setHover] = useState(0)

@@ -2,13 +2,7 @@ import { useState, useMemo } from "react"
 import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const availableWorks = [
-  { id: "1", name: "Backstage Management", client: "Live Events Co", location: "Kochi", date: "2026-11-01", payment: 1500, time: "09:00 AM - 05:00 PM" },
-  { id: "2", name: "Light Setup Technician", client: "Pro Sounds", location: "Trivandrum", date: "2026-10-30", payment: 2500, time: "10:00 AM - 08:00 PM" },
-  { id: "3", name: "VIP Escort Security", client: "Royal Guard", location: "Kozhikode", date: "2026-11-05", payment: 3000, time: "06:00 PM - 02:00 AM" },
-  { id: "4", name: "Food Stall Coordinator", client: "CaterMasters", location: "Kochi", date: "2026-10-29", payment: 1200, time: "04:00 PM - 11:00 PM" },
-  { id: "5", name: "Sound Engineer Assistant", client: "AudioX", location: "Thrissur", date: "2026-11-10", payment: 2000, time: "08:00 AM - 04:00 PM" },
-]
+const availableWorks = []
 
 export function GetWorkView() {
   const [searchQuery, setSearchQuery] = useState("")

@@ -3,22 +3,9 @@ import { ArrowLeft, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Mock data representing works in the last 24 hours
-const recentWorks = [
-  { id: "WRK-Z7X9Y", name: "VIP Lounge Security", date: "Today, 10:00 AM", completed: false },
-  { id: "WRK-B2C3D", name: "Main Stage Lighting", date: "Yesterday, 8:00 PM", completed: false },
-]
+const recentWorks = []
 
-const workersByWork: Record<string, any[]> = {
-  "WRK-Z7X9Y": [
-    { id: "W6", name: "Arjun Desai", avatar: "https://i.pravatar.cc/150?u=f", reported: false },
-    { id: "W7", name: "Sunita Rao", avatar: "https://i.pravatar.cc/150?u=g", reported: false }
-  ],
-  "WRK-B2C3D": [
-    { id: "W8", name: "Karan Mehta", avatar: "https://i.pravatar.cc/150?u=h", reported: false },
-    { id: "W9", name: "Anita Joshi", avatar: "https://i.pravatar.cc/150?u=i", reported: false },
-    { id: "W10", name: "Ravi Verma", avatar: "https://i.pravatar.cc/150?u=j", reported: false }
-  ]
-}
+const workersByWork: Record<string, any[]> = {}
 
 function WorkerNoShowCard({ worker }: { worker: any }) {
   const [reported, setReported] = useState(worker.reported)

@@ -2,10 +2,7 @@ import { useState } from "react"
 import { ArrowLeft, Star, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-const myPastWorks = [
-  { id: "WRK-A1B2C", name: "Stage Setup for Concert", date: "Oct 24", clientName: "EventMaster Pro", completed: true },
-  { id: "WRK-X9Y8Z", name: "Registration Desk", date: "Oct 21", clientName: "Global Summits Inc.", completed: true },
-]
+const myPastWorks = []
 
 function StarRating({ rating, setRating }: { rating: number, setRating: (r: number) => void }) {
   const [hover, setHover] = useState(0)

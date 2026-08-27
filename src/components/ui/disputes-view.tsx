@@ -2,17 +2,7 @@ import { useState, useRef } from "react"
 import { ArrowLeft, AlertTriangle, Upload, CheckCircle2, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Mock data representing client no-show reports against this worker
-const noShowReports = [
-  { 
-    id: "REP-99X2", 
-    workId: "WRK-Z7X9Y", 
-    workName: "VIP Lounge Security", 
-    clientName: "Global Summits Inc.",
-    date: "Yesterday, 8:00 PM",
-    status: "Action Required"
-  }
-]
+const noShowReports = []
 
 function DisputeForm({ report, onCancel, onSubmit }: { report: any, onCancel: () => void, onSubmit: () => void }) {
   const [reason, setReason] = useState("")
