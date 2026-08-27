@@ -1,13 +1,96 @@
-import { useState, useMemo } from "react"
-import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const availableWorks = []
+import { supabase } from "@/lib/supabase"
 
 export function GetWorkView() {
   const [searchQuery, setSearchQuery] = useState("")
   const [locationFilter, setLocationFilter] = useState("All")
   const [sortBy, setSortBy] = useState<"none" | "nearestDate" | "highPayment">("none")
+
+  const [availableWorks, setAvailableWorks] = useState<any[]>([])
+  const [appliedWorkIds, setAppliedWorkIds] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchWorks() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        // Fetch open works with client username
+        const { data: worksData, error: worksError } = await supabase
+          .from('works')
+          .select(`
+            id,
+            work_name,
+            location,
+            date_work,
+            payment_amount,
+            profiles (
+              username
+            )
+          `)
+          .eq('status', 'open')
+
+        if (worksError) throw worksError
+
+        // Fetch user's applications to know what they already applied to
+        if (user) {
+          const { data: appsData } = await supabase
+            .from('applications')
+            .select('work_id')
+            .eq('worker_id', user.id)
+          
+          if (appsData) {
+            setAppliedWorkIds(new Set(appsData.map(a => a.work_id)))
+          }
+        }
+
+        const formattedWorks = (worksData || []).map((w: any) => ({
+          id: w.id,
+          name: w.work_name,
+          client: w.profiles?.username || "Unknown Client",
+          location: w.location,
+          date: w.date_work,
+          payment: w.payment_amount
+        }))
+        
+        setAvailableWorks(formattedWorks)
+      } catch (err) {
+        console.error("Error fetching works:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchWorks()
+  }, [])
+
+  const handleApply = async (workId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return alert("Please log in to apply.")
+
+      const { error } = await supabase
+        .from('applications')
+        .insert({
+          work_id: workId,
+          worker_id: user.id
+        })
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          alert("You have already applied for this work.")
+        } else {
+          throw error
+        }
+      }
+
+      setAppliedWorkIds(prev => new Set(prev).add(workId))
+    } catch (err: any) {
+      console.error("Apply error:", err)
+      alert("Failed to apply: " + err.message)
+    }
+  }
 
   // Extract unique locations for the filter
   const locations = ["All", ...Array.from(new Set(availableWorks.map(w => w.location)))]
@@ -35,7 +118,7 @@ export function GetWorkView() {
     }
 
     return result
-  }, [searchQuery, locationFilter, sortBy])
+  }, [searchQuery, locationFilter, sortBy, availableWorks])
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
@@ -114,9 +197,15 @@ export function GetWorkView() {
                   <div className="text-xl font-bold text-emerald-400 flex items-center">
                     <IndianRupee className="w-5 h-5 mr-0.5" />{work.payment}
                   </div>
-                  <button className="px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-transform hover:scale-105 active:scale-95">
-                    Apply Now
-                  </button>
+                  {appliedWorkIds.has(work.id) ? (
+                    <button disabled className="px-6 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-sm font-bold rounded-full flex items-center gap-2 cursor-not-allowed">
+                      <Check className="w-4 h-4" /> Applied
+                    </button>
+                  ) : (
+                    <button onClick={() => handleApply(work.id)} className="px-6 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-zinc-200 transition-transform hover:scale-105 active:scale-95">
+                      Apply Now
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
