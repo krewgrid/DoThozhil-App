@@ -128,6 +128,20 @@ export function PostWorkView() {
       return
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const workDateObj = new Date(dateWork);
+    // When parsing YYYY-MM-DD, it might parse as UTC midnight, which could shift timezone. 
+    // To be safe, we parse the date string parts to local midnight:
+    const [year, month, day] = dateWork.split('-');
+    const localWorkDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+
+    if (localWorkDate < today) {
+      setErrorMsg("Date of work cannot be in the past.")
+      setLoading(false)
+      return
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
