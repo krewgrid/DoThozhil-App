@@ -1,10 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const works = []
-
-const workersByWork: Record<string, any[]> = {}
+import { supabase } from "@/lib/supabase"
 
 function StarRating({ rating, setRating }: { rating: number, setRating: (r: number) => void }) {
   const [hover, setHover] = useState(0)
@@ -29,16 +26,36 @@ function StarRating({ rating, setRating }: { rating: number, setRating: (r: numb
   )
 }
 
-function WorkerReviewCard({ worker }: { worker: any }) {
+function WorkerReviewCard({ worker, workId, reviewerId }: { worker: any, workId: string, reviewerId: string }) {
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('reviews').insert({
+        work_id: workId,
+        reviewer_id: reviewerId,
+        reviewee_id: worker.id,
+        rating,
+        feedback: feedback.trim() || null
+      })
+      if (error) throw error
+      setSubmitted(true)
+    } catch (err: any) {
+      alert("Failed to submit review: " + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (submitted) {
     return (
       <div className="p-4 border border-emerald-500/30 bg-emerald-500/10 rounded-xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src={worker.avatar} alt={worker.name} className="w-10 h-10 rounded-full object-cover" />
+          <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold">{worker.name.charAt(0)}</div>
           <div>
             <div className="font-medium text-white">{worker.name}</div>
             <div className="text-xs text-emerald-300">Review submitted successfully</div>
@@ -54,7 +71,7 @@ function WorkerReviewCard({ worker }: { worker: any }) {
   return (
     <div className="p-4 border border-white/10 bg-white/5 rounded-xl flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <img src={worker.avatar} alt={worker.name} className="w-10 h-10 rounded-full object-cover" />
+        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold">{worker.name.charAt(0)}</div>
         <div className="font-medium text-white">{worker.name}</div>
       </div>
       <div>
@@ -71,68 +88,112 @@ function WorkerReviewCard({ worker }: { worker: any }) {
         />
       </div>
       <button 
-        onClick={() => setSubmitted(true)}
-        disabled={rating === 0}
+        onClick={handleSubmit}
+        disabled={rating === 0 || loading}
         className="self-end px-6 py-2 bg-white text-black text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-200 transition-colors"
       >
-        Submit Review
+        {loading ? "Submitting..." : "Submit Review"}
       </button>
     </div>
   )
 }
 
 export function ReviewWorkersView() {
-  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null)
+  const [works, setWorks] = useState<any[]>([])
+  const [selectedWork, setSelectedWork] = useState<any | null>(null)
+  const [workers, setWorkers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
+  useEffect(() => {
+    async function loadWorks() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setCurrentUser(user)
+
+      const { data } = await supabase
+        .from('works')
+        .select('id, work_name, date_work')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      if (data) setWorks(data)
+      setLoading(false)
+    }
+    loadWorks()
+  }, [])
+
+  const selectWork = async (work: any) => {
+    setSelectedWork(work)
+    setWorkers([])
+    const { data } = await supabase
+      .from('applications')
+      .select(`
+        worker_id,
+        profiles!applications_worker_id_fkey ( username )
+      `)
+      .eq('work_id', work.id)
+      .in('status', ['approved', 'completed']) // Only review workers who actually participated
+    
+    if (data) {
+      setWorkers(data.map((app: any) => ({
+        id: app.worker_id,
+        name: app.profiles?.username || "Unknown Worker"
+      })))
+    }
+  }
 
   const handleBack = () => {
-    if (selectedWorkId) {
-      setSelectedWorkId(null)
-    }
+    setSelectedWork(null)
   }
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
       <div className="w-full max-w-2xl mx-auto mt-4">
-        
-
         <div className="mt-8 relative z-10">
-          {!selectedWorkId ? (
+          {!selectedWork ? (
             <>
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-white">Review Workers</h1>
-                <p className="text-sm text-zinc-400 mt-1">Select a completed work to review the workers who participated.</p>
+                <p className="text-sm text-zinc-400 mt-1">Select a work to review the workers who participated.</p>
               </div>
 
               <div className="flex flex-col gap-3">
+                {loading ? <div className="text-zinc-400">Loading...</div> : works.length === 0 ? <div className="text-zinc-400">No works found.</div> : null}
                 {works.map(work => (
                   <button 
                     key={work.id}
-                    onClick={() => setSelectedWorkId(work.id)}
+                    onClick={() => selectWork(work)}
                     className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-left"
                   >
                     <div>
-                      <div className="text-zinc-400 font-mono text-xs mb-1">{work.id}</div>
-                      <div className="font-medium text-white">{work.name}</div>
+                      <div className="text-zinc-400 font-mono text-xs mb-1">WRK-{work.id.substring(0,8).toUpperCase()}</div>
+                      <div className="font-medium text-white">{work.work_name}</div>
                     </div>
-                    <div className="text-sm text-zinc-400">{work.date}</div>
+                    <div className="text-sm text-zinc-400">{work.date_work}</div>
                   </button>
                 ))}
               </div>
             </>
           ) : (
             <>
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-white">Workers for {selectedWorkId}</h1>
-                <p className="text-sm text-zinc-400 mt-1">Please provide a 5-star rating and optional feedback for each worker.</p>
+              <div className="mb-6 flex items-center gap-4">
+                <button onClick={handleBack} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <ArrowLeft className="w-5 h-5 text-zinc-400" />
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">Workers for {selectedWork.work_name}</h1>
+                  <p className="text-sm text-zinc-400 mt-1">Please provide a 5-star rating and optional feedback for each worker.</p>
+                </div>
               </div>
 
               <div className="flex flex-col gap-4">
-                {workersByWork[selectedWorkId]?.map(worker => (
-                  <WorkerReviewCard key={worker.id} worker={worker} />
+                {workers.map(worker => (
+                  <WorkerReviewCard key={worker.id} worker={worker} workId={selectedWork.id} reviewerId={currentUser.id} />
                 ))}
                 
-                {(!workersByWork[selectedWorkId] || workersByWork[selectedWorkId].length === 0) && (
-                  <div className="text-zinc-400 text-sm text-center py-8">No workers found for this work.</div>
+                {workers.length === 0 && (
+                  <div className="text-zinc-400 text-sm text-center py-8">No approved workers found for this work.</div>
                 )}
               </div>
             </>

@@ -1,8 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Star, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const myPastWorks = []
+import { supabase } from "@/lib/supabase"
 
 function StarRating({ rating, setRating }: { rating: number, setRating: (r: number) => void }) {
   const [hover, setHover] = useState(0)
@@ -27,10 +26,30 @@ function StarRating({ rating, setRating }: { rating: number, setRating: (r: numb
   )
 }
 
-function ClientReviewCard({ clientName }: { clientName: string }) {
+function ClientReviewCard({ clientName, clientId, workId, reviewerId }: { clientName: string, clientId: string, workId: string, reviewerId: string }) {
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.from('reviews').insert({
+        work_id: workId,
+        reviewer_id: reviewerId,
+        reviewee_id: clientId,
+        rating,
+        feedback: feedback.trim() || null
+      })
+      if (error) throw error
+      setSubmitted(true)
+    } catch (err: any) {
+      alert("Failed to submit review: " + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (submitted) {
     return (
@@ -73,23 +92,59 @@ function ClientReviewCard({ clientName }: { clientName: string }) {
         />
       </div>
       <button 
-        onClick={() => setSubmitted(true)}
-        disabled={rating === 0}
+        onClick={handleSubmit}
+        disabled={rating === 0 || loading}
         className="self-end px-6 py-2 bg-white text-black text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-200 transition-colors"
       >
-        Submit Review
+        {loading ? "Submitting..." : "Submit Review"}
       </button>
     </div>
   )
 }
 
 export function ReviewClientsView() {
+  const [myPastWorks, setMyPastWorks] = useState<any[]>([])
   const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
+  useEffect(() => {
+    async function loadPastWorks() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setCurrentUser(user)
+
+      const { data } = await supabase
+        .from('applications')
+        .select(`
+          work_id,
+          works (
+            work_name,
+            date_work,
+            client_id,
+            profiles ( username )
+          )
+        `)
+        .eq('worker_id', user.id)
+        .in('status', ['approved', 'completed'])
+      
+      if (data) {
+        const formatted = data.map((app: any) => ({
+          id: app.work_id,
+          name: app.works?.work_name,
+          date: app.works?.date_work,
+          clientId: app.works?.client_id,
+          clientName: app.works?.profiles?.username || "Unknown Client"
+        }))
+        setMyPastWorks(formatted)
+      }
+      setLoading(false)
+    }
+    loadPastWorks()
+  }, [])
 
   const handleBack = () => {
-    if (selectedWorkId) {
-      setSelectedWorkId(null)
-    }
+    setSelectedWorkId(null)
   }
 
   const selectedWork = myPastWorks.find(w => w.id === selectedWorkId)
@@ -98,7 +153,6 @@ export function ReviewClientsView() {
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
       <div className="w-full max-w-2xl mx-auto mt-4">
         
-
         <div className="mt-8 relative z-10">
           {!selectedWorkId ? (
             <>
@@ -108,6 +162,7 @@ export function ReviewClientsView() {
               </div>
 
               <div className="flex flex-col gap-3">
+                {loading ? <div className="text-zinc-400">Loading...</div> : myPastWorks.length === 0 ? <div className="text-zinc-400">No past works found.</div> : null}
                 {myPastWorks.map(work => (
                   <button 
                     key={work.id}
@@ -115,7 +170,7 @@ export function ReviewClientsView() {
                     className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors text-left"
                   >
                     <div>
-                      <div className="text-zinc-400 font-mono text-xs mb-1">{work.id}</div>
+                      <div className="text-zinc-400 font-mono text-xs mb-1">WRK-{work.id.substring(0,8).toUpperCase()}</div>
                       <div className="font-medium text-white">{work.name}</div>
                       <div className="text-xs text-zinc-500 mt-1 flex items-center gap-1">
                         <Building2 className="w-3 h-3" /> {work.clientName}
@@ -128,13 +183,23 @@ export function ReviewClientsView() {
             </>
           ) : (
             <>
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-white">Review Client</h1>
-                <p className="text-sm text-zinc-400 mt-1">For work: <span className="text-white font-medium">{selectedWork?.name}</span> ({selectedWorkId})</p>
+              <div className="mb-6 flex items-center gap-4">
+                <button onClick={handleBack} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <ArrowLeft className="w-5 h-5 text-zinc-400" />
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-white">Review Client</h1>
+                  <p className="text-sm text-zinc-400 mt-1">For work: <span className="text-white font-medium">{selectedWork?.name}</span></p>
+                </div>
               </div>
 
               {selectedWork && (
-                <ClientReviewCard clientName={selectedWork.clientName} />
+                <ClientReviewCard 
+                  clientName={selectedWork.clientName} 
+                  clientId={selectedWork.clientId} 
+                  workId={selectedWork.id} 
+                  reviewerId={currentUser.id} 
+                />
               )}
             </>
           )}

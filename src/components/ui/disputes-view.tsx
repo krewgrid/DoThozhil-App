@@ -1,19 +1,60 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { ArrowLeft, AlertTriangle, Upload, CheckCircle2, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
 
-const noShowReports = []
-
-function DisputeForm({ report, onCancel, onSubmit }: { report: any, onCancel: () => void, onSubmit: () => void }) {
+function DisputeForm({ report, onCancel, onSubmit, workerId }: { report: any, onCancel: () => void, onSubmit: () => void, workerId: string }) {
   const [reason, setReason] = useState("")
   const [proofImage, setProofImage] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      const imageUrl = URL.createObjectURL(file)
+      const selectedFile = e.target.files[0]
+      setFile(selectedFile)
+      const imageUrl = URL.createObjectURL(selectedFile)
       setProofImage(imageUrl)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!file || !reason.trim()) return
+
+    setLoading(true)
+    try {
+      // 1. Upload proof photo
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${workerId}-${Date.now()}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('disputes')
+        .upload(fileName, file)
+        
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('disputes')
+        .getPublicUrl(fileName)
+
+      // 2. Insert dispute record
+      const { error: disputeError } = await supabase
+        .from('disputes')
+        .insert({
+          application_id: report.id,
+          worker_id: workerId,
+          reason: reason.trim(),
+          proof_url: publicUrl
+        })
+        
+      if (disputeError) throw disputeError
+      
+      onSubmit()
+    } catch (err: any) {
+      alert("Failed to submit dispute: " + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -66,17 +107,18 @@ function DisputeForm({ report, onCancel, onSubmit }: { report: any, onCancel: ()
           <button 
             type="button"
             onClick={onCancel}
+            disabled={loading}
             className="px-4 py-2 text-zinc-400 text-sm font-medium hover:text-white transition-colors"
           >
             Cancel
           </button>
           <button 
             type="button"
-            onClick={onSubmit}
-            disabled={!reason.trim() || !proofImage}
+            onClick={handleSubmit}
+            disabled={!reason.trim() || !proofImage || loading}
             className="px-6 py-2 bg-white text-black text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-200 transition-colors"
           >
-            Submit Dispute
+            {loading ? "Submitting..." : "Submit Dispute"}
           </button>
         </div>
       </div>
@@ -84,7 +126,7 @@ function DisputeForm({ report, onCancel, onSubmit }: { report: any, onCancel: ()
   )
 }
 
-function ReportCard({ report }: { report: any }) {
+function ReportCard({ report, workerId }: { report: any, workerId: string }) {
   const [isDisputing, setIsDisputing] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
@@ -134,6 +176,7 @@ function ReportCard({ report }: { report: any }) {
       {isDisputing && (
         <DisputeForm 
           report={report} 
+          workerId={workerId}
           onCancel={() => setIsDisputing(false)} 
           onSubmit={() => setIsSubmitted(true)} 
         />
@@ -143,11 +186,46 @@ function ReportCard({ report }: { report: any }) {
 }
 
 export function DisputesView() {
+  const [reports, setReports] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
+  useEffect(() => {
+    async function loadReports() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setCurrentUser(user)
+
+      const { data } = await supabase
+        .from('applications')
+        .select(`
+          id,
+          created_at,
+          works (
+            work_name,
+            profiles ( username )
+          )
+        `)
+        .eq('worker_id', user.id)
+        .eq('status', 'no-show')
+      
+      if (data) {
+        const formatted = data.map((app: any) => ({
+          id: app.id,
+          workName: app.works?.work_name,
+          clientName: app.works?.profiles?.username || "Unknown Client",
+          date: new Date(app.created_at).toLocaleDateString()
+        }))
+        setReports(formatted)
+      }
+      setLoading(false)
+    }
+    loadReports()
+  }, [])
+
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto text-white">
       <div className="w-full max-w-3xl mx-auto mt-4">
-        
-
         <div className="relative z-10">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-white mb-2">Disputes</h1>
@@ -157,9 +235,11 @@ export function DisputesView() {
           </div>
 
           <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 pb-8">
-            {noShowReports.length > 0 ? (
-              noShowReports.map((report) => (
-                <ReportCard key={report.id} report={report} />
+            {loading ? (
+              <div className="text-center text-zinc-400">Loading reports...</div>
+            ) : reports.length > 0 ? (
+              reports.map((report) => (
+                <ReportCard key={report.id} report={report} workerId={currentUser.id} />
               ))
             ) : (
               <div className="text-center py-20">
