@@ -134,8 +134,21 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
     const storedName = userMeta.username || email.split('@')[0];
     let storedRole = userMeta.role || 'client';
     
+    // Always check the actual profile in the database since roles can change (e.g. bans)
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+    if (profile && profile.role) {
+      storedRole = profile.role;
+    }
+    
     if (email === 'krewgrid.admin@gmail.com') {
       storedRole = 'admin';
+    }
+
+    if (storedRole === 'banned') {
+      await supabase.auth.signOut();
+      setErrorMsg('Your account has been banned. Please contact support.krewgrid@gmail.com');
+      setLoading(false);
+      return;
     }
 
     localStorage.setItem('krewgrid_username', storedName);
