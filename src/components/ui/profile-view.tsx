@@ -22,27 +22,44 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
 
   useEffect(() => {
     async function loadProfile() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
 
-        if (profile) {
-          const date = new Date(profile.created_at)
-          setUserDetails({
-            username: profile.username || "User",
-            email: user.email || "",
-            contactNumber: profile.contact || "Not provided",
-            whatsappNumber: profile.whatsapp || "Not provided",
-            accountType: profile.role === "client" ? "Client" : profile.role === "worker" ? "Worker" : "Admin",
-            joinedDate: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-          })
+        if (user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (profileError) throw profileError
+
+          if (profile) {
+            const date = new Date(profile.created_at)
+            setUserDetails({
+              username: profile.username || "User",
+              email: user.email || "",
+              contactNumber: profile.contact || "Not provided",
+              whatsappNumber: profile.whatsapp || "Not provided",
+              accountType: profile.role === "client" ? "Client" : profile.role === "worker" ? "Worker" : "Admin",
+              joinedDate: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            })
+          }
         }
+      } catch (err: any) {
+        console.error("Profile load error:", err)
+        setUserDetails({
+          username: "Error loading profile",
+          email: err.message,
+          contactNumber: "Error",
+          whatsappNumber: "Error",
+          accountType: "Error",
+          joinedDate: "Error"
+        })
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
     loadProfile()
   }, [])
