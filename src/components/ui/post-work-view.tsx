@@ -122,6 +122,12 @@ export function PostWorkView() {
       return
     }
 
+    if (new Date(paymentCredit) < new Date(dateWork)) {
+      setErrorMsg("Payment credit date cannot be before the date of work.")
+      setLoading(false)
+      return
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
