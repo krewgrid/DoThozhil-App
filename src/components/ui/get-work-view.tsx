@@ -115,7 +115,8 @@ export function GetWorkView() {
           instruction: w.instruction,
           days: w.days,
           reportingTime: formatTime12Hour(w.reporting_time),
-          completionTime: w.completion_time
+          completionTime: w.completion_time,
+          requirePhoto: w.require_photo
         }))
         
         setAvailableWorks(formattedWorks)
@@ -128,6 +129,17 @@ export function GetWorkView() {
     }
     fetchWorks()
   }, [])
+
+  const [workerPhoto, setWorkerPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setWorkerPhoto(file)
+      setPhotoPreview(URL.createObjectURL(file))
+    }
+  }
 
   const submitApplication = async () => {
     if (!selectedWork) return;
@@ -144,6 +156,11 @@ export function GetWorkView() {
       }
     }
 
+    if (selectedWork.requirePhoto && !workerPhoto) {
+      alert("A photo is required to apply for this work. Please upload your photo.")
+      return;
+    }
+
     setIsApplying(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -153,13 +170,32 @@ export function GetWorkView() {
         return
       }
 
+      let photoUrl = null
+      if (workerPhoto) {
+        const fileExt = workerPhoto.name.split('.').pop()
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('worker_photos')
+          .upload(fileName, workerPhoto)
+          
+        if (uploadError) throw uploadError
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('worker_photos')
+          .getPublicUrl(fileName)
+          
+        photoUrl = publicUrl
+      }
+
       const { error } = await supabase
         .from('applications')
         .insert({
           work_id: selectedWork.id,
           worker_id: user.id,
           slots_taken: slotsTaken,
-          co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null
+          co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null,
+          photo_url: photoUrl
         })
 
       if (error) {
@@ -440,6 +476,25 @@ export function GetWorkView() {
                         <p className="leading-relaxed">
                           <strong>Responsibility Disclaimer:</strong> By claiming multiple slots, you confirm that you are bringing {slotsTaken - 1} additional worker(s). It is solely your responsibility to ensure that they arrive on time and complete the work correctly. Any no-shows or disputes from your team will affect your profile rating.
                         </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedWork.requirePhoto && (
+                    <div className="space-y-3 mt-6">
+                      <label className="block text-sm text-zinc-400">
+                        Worker Photo Required
+                      </label>
+                      <div className="border border-dashed border-white/20 p-6 rounded-xl flex flex-col items-center justify-center relative cursor-pointer hover:bg-white/5 transition-colors">
+                        {photoPreview ? (
+                          <img src={photoPreview} alt="Preview" className="w-24 h-24 object-cover rounded-lg mb-2" />
+                        ) : (
+                          <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-2">
+                            <Users className="w-6 h-6 text-zinc-400" />
+                          </div>
+                        )}
+                        <span className="text-sm text-zinc-400">{photoPreview ? "Change Photo" : "Click to upload a clear photo of yourself"}</span>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     </div>
                   )}
