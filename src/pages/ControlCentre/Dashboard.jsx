@@ -1,78 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { Users, AlertTriangle, Scale, Ban, ShieldCheck, ChevronRight, Eye, CheckCircle, XCircle, ArrowLeft, Star, Briefcase, Phone, Calendar } from 'lucide-react';
+import { Users, AlertTriangle, Scale, Ban, ShieldCheck, ChevronRight, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // ─── Overview Tab ───────────────────────────────────────────────
 function OverviewTab() {
   const [stats, setStats] = useState({ openDisputes: 0, pendingNoShows: 0, bannedUsers: 0, activeUsers: 0 });
-  const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadOverview() {
       try {
-        // Fetch counts
-        const [disputesRes, noShowsRes, bannedRes, activeRes] = await Promise.all([
-          supabase.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-          supabase.from('applications').select('id', { count: 'exact', head: true }).eq('status', 'no-show'),
-          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'banned'),
-          supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', 'banned'),
-        ]);
+        const { count: disputeCount } = await supabase
+          .from('disputes')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'open');
+
+        const { count: noShowCount } = await supabase
+          .from('applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'no-show');
+
+        const { count: bannedCount } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', 'banned');
+
+        const { count: activeCount } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .neq('role', 'banned');
 
         setStats({
-          openDisputes: disputesRes.count || 0,
-          pendingNoShows: noShowsRes.count || 0,
-          bannedUsers: bannedRes.count || 0,
-          activeUsers: activeRes.count || 0,
+          openDisputes: disputeCount || 0,
+          pendingNoShows: noShowCount || 0,
+          bannedUsers: bannedCount || 0,
+          activeUsers: activeCount || 0,
         });
-
-        // Fetch recent disputes
-        const { data: recentDisputes } = await supabase
-          .from('disputes')
-          .select(`
-            id, reason, status, created_at,
-            profiles!disputes_worker_id_fkey ( username ),
-            applications ( works ( work_name ) )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        // Fetch recent no-shows
-        const { data: recentNoShows } = await supabase
-          .from('applications')
-          .select(`
-            id, created_at,
-            profiles!applications_worker_id_fkey ( username ),
-            works ( work_name, profiles ( username ) )
-          `)
-          .eq('status', 'no-show')
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        const activity = [];
-        (recentDisputes || []).forEach(d => {
-          activity.push({
-            type: 'dispute',
-            user: d.profiles?.username || 'Unknown',
-            target: d.applications?.works?.work_name || 'Unknown Work',
-            reason: d.reason?.substring(0, 60) + (d.reason?.length > 60 ? '...' : ''),
-            time: new Date(d.created_at).toLocaleDateString(),
-            status: d.status,
-          });
-        });
-        (recentNoShows || []).forEach(n => {
-          activity.push({
-            type: 'no-show',
-            user: n.works?.profiles?.username || 'Unknown Client',
-            target: n.profiles?.username || 'Unknown Worker',
-            reason: `No-show reported for "${n.works?.work_name || 'Unknown Work'}"`,
-            time: new Date(n.created_at).toLocaleDateString(),
-          });
-        });
-        activity.sort((a, b) => new Date(b.time) - new Date(a.time));
-        setRecentActivity(activity.slice(0, 10));
       } catch (err) {
         console.error('Admin overview error:', err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -88,51 +55,20 @@ function OverviewTab() {
   ];
 
   if (loading) return <div className="p-8 text-zinc-400">Loading overview...</div>;
+  if (error) return <div className="p-8 text-red-400">Error: {error}</div>;
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((stat, i) => (
-          <div key={i} className="p-6 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-zinc-400">{stat.label}</span>
-              {stat.icon}
-            </div>
-            <div className="text-3xl font-bold text-white">{stat.value}</div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {statCards.map((stat, i) => (
+        <div key={i} className="p-6 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-zinc-400">{stat.label}</span>
+            {stat.icon}
           </div>
-        ))}
-      </div>
-
-      <div className="rounded-xl border border-white/10 bg-white/5 flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-white/10">
-          <h2 className="text-lg font-bold text-white">Recent Activity</h2>
+          <div className="text-3xl font-bold text-white">{stat.value}</div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 max-h-[400px]">
-          {recentActivity.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500">No recent activity.</div>
-          ) : (
-            recentActivity.map((activity, i) => (
-              <div key={i} className="p-4 rounded-lg bg-black/40 border border-white/5 flex items-center justify-between hover:border-white/10 transition-colors">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.type === 'dispute' ? 'bg-zinc-800 text-zinc-300' : 'bg-amber-500/20 text-amber-500'}`}>
-                    {activity.type === 'dispute' ? <Scale className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-white flex items-center gap-2">
-                      {activity.user} <ChevronRight className="w-3 h-3 text-zinc-500" /> {activity.target}
-                    </div>
-                    <div className="text-xs text-zinc-400 mt-1">{activity.reason}</div>
-                  </div>
-                </div>
-                <div className="text-xs text-zinc-500 font-medium shrink-0 ml-4">
-                  {activity.time}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </>
+      ))}
+    </div>
   );
 }
 
@@ -142,32 +78,80 @@ function DisputesTab() {
   const [loading, setLoading] = useState(true);
   const [proofModal, setProofModal] = useState(null);
 
-  useEffect(() => {
-    loadDisputes();
-  }, []);
-
   async function loadDisputes() {
     setLoading(true);
-    const { data } = await supabase
-      .from('disputes')
-      .select(`
-        id, reason, proof_url, status, created_at, application_id,
-        profiles!disputes_worker_id_fkey ( username ),
-        applications ( id, works ( work_name, profiles ( username ) ) )
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      // Simple query - just get dispute data
+      const { data, error } = await supabase
+        .from('disputes')
+        .select('id, reason, proof_url, status, created_at, application_id, worker_id')
+        .order('created_at', { ascending: false });
 
-    setDisputes(data || []);
-    setLoading(false);
+      if (error) throw error;
+
+      // Enrich with worker names and work names
+      const enriched = [];
+      for (const d of (data || [])) {
+        let workerName = 'Unknown';
+        let workName = 'Unknown';
+        let clientName = 'Unknown';
+
+        // Get worker name
+        if (d.worker_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', d.worker_id)
+            .single();
+          if (profile) workerName = profile.username;
+        }
+
+        // Get work name and client from application
+        if (d.application_id) {
+          const { data: app } = await supabase
+            .from('applications')
+            .select('work_id')
+            .eq('id', d.application_id)
+            .single();
+
+          if (app?.work_id) {
+            const { data: work } = await supabase
+              .from('works')
+              .select('work_name, client_id')
+              .eq('id', app.work_id)
+              .single();
+
+            if (work) {
+              workName = work.work_name;
+              const { data: clientProfile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', work.client_id)
+                .single();
+              if (clientProfile) clientName = clientProfile.username;
+            }
+          }
+        }
+
+        enriched.push({ ...d, workerName, workName, clientName });
+      }
+
+      setDisputes(enriched);
+    } catch (err) {
+      console.error('Disputes load error:', err);
+    } finally {
+      setLoading(false);
+    }
   }
+
+  useEffect(() => { loadDisputes(); }, []);
 
   const handleAction = async (disputeId, applicationId, action) => {
     try {
-      // Update dispute status
-      await supabase.from('disputes').update({ status: action }).eq('id', disputeId);
+      const { error } = await supabase.from('disputes').update({ status: action }).eq('id', disputeId);
+      if (error) throw error;
 
-      // If resolved, restore worker's application to approved
-      if (action === 'resolved') {
+      if (action === 'resolved' && applicationId) {
         await supabase.from('applications').update({ status: 'approved' }).eq('id', applicationId);
       }
 
@@ -181,7 +165,7 @@ function DisputesTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white">All Disputes</h2>
         <span className="text-sm text-zinc-400">{disputes.length} total</span>
       </div>
@@ -198,9 +182,9 @@ function DisputesTab() {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="text-xs text-zinc-500 mb-1">Worker</div>
-                  <div className="font-medium text-white">{d.profiles?.username || 'Unknown'}</div>
+                  <div className="font-medium text-white">{d.workerName}</div>
                   <div className="text-xs text-zinc-400 mt-1">
-                    Work: {d.applications?.works?.work_name || 'Unknown'} • Client: {d.applications?.works?.profiles?.username || 'Unknown'}
+                    Work: {d.workName} • Client: {d.clientName}
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium border uppercase tracking-wider ${
@@ -218,15 +202,17 @@ function DisputesTab() {
               </div>
 
               <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setProofModal(d.proof_url)}
-                  className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  <Eye className="w-4 h-4" /> View Proof Photo
-                </button>
+                {d.proof_url && (
+                  <button
+                    onClick={() => setProofModal(d.proof_url)}
+                    className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <Eye className="w-4 h-4" /> View Proof Photo
+                  </button>
+                )}
 
                 {d.status === 'open' && (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 ml-auto">
                     <button
                       onClick={() => handleAction(d.id, d.application_id, 'rejected')}
                       className="px-4 py-1.5 bg-red-500/10 text-red-400 text-xs font-medium rounded-md hover:bg-red-500/20 transition-colors"
@@ -252,7 +238,7 @@ function DisputesTab() {
       {/* Proof Photo Modal */}
       {proofModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setProofModal(null)}>
-          <div className="max-w-2xl max-h-[80vh] rounded-xl overflow-hidden border border-white/10" onClick={e => e.stopPropagation()}>
+          <div className="relative max-w-2xl max-h-[80vh] rounded-xl overflow-hidden border border-white/10" onClick={e => e.stopPropagation()}>
             <img src={proofModal} alt="Dispute Proof" className="w-full h-full object-contain" />
             <button onClick={() => setProofModal(null)} className="absolute top-4 right-4 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition-colors">
               <XCircle className="w-6 h-6" />
@@ -269,30 +255,56 @@ function NoShowsTab() {
   const [noShows, setNoShows] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadNoShows();
-  }, []);
-
   async function loadNoShows() {
     setLoading(true);
-    const { data } = await supabase
-      .from('applications')
-      .select(`
-        id, created_at,
-        profiles!applications_worker_id_fkey ( username ),
-        works ( work_name, date_work, profiles ( username ) )
-      `)
-      .eq('status', 'no-show')
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('id, worker_id, work_id, created_at')
+        .eq('status', 'no-show')
+        .order('created_at', { ascending: false });
 
-    setNoShows(data || []);
-    setLoading(false);
+      if (error) throw error;
+
+      const enriched = [];
+      for (const app of (data || [])) {
+        let workerName = 'Unknown';
+        let workName = 'Unknown';
+        let workDate = 'N/A';
+        let clientName = 'Unknown';
+
+        if (app.worker_id) {
+          const { data: p } = await supabase.from('profiles').select('username').eq('id', app.worker_id).single();
+          if (p) workerName = p.username;
+        }
+        if (app.work_id) {
+          const { data: w } = await supabase.from('works').select('work_name, date_work, client_id').eq('id', app.work_id).single();
+          if (w) {
+            workName = w.work_name;
+            workDate = w.date_work;
+            const { data: c } = await supabase.from('profiles').select('username').eq('id', w.client_id).single();
+            if (c) clientName = c.username;
+          }
+        }
+
+        enriched.push({ ...app, workerName, workName, workDate, clientName });
+      }
+
+      setNoShows(enriched);
+    } catch (err) {
+      console.error('No-shows load error:', err);
+    } finally {
+      setLoading(false);
+    }
   }
 
+  useEffect(() => { loadNoShows(); }, []);
+
   const handleDismiss = async (appId) => {
-    if (!confirm('Dismiss this no-show report? The worker\'s status will be restored to approved.')) return;
+    if (!confirm('Dismiss this no-show report? The worker will be restored to approved.')) return;
     try {
-      await supabase.from('applications').update({ status: 'approved' }).eq('id', appId);
+      const { error } = await supabase.from('applications').update({ status: 'approved' }).eq('id', appId);
+      if (error) throw error;
       loadNoShows();
     } catch (err) {
       alert('Failed: ' + err.message);
@@ -303,7 +315,7 @@ function NoShowsTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white">No-Show Reports</h2>
         <span className="text-sm text-zinc-400">{noShows.length} total</span>
       </div>
@@ -318,12 +330,12 @@ function NoShowsTab() {
           {noShows.map(ns => (
             <div key={ns.id} className="p-5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
               <div>
-                <div className="font-medium text-white">{ns.profiles?.username || 'Unknown Worker'}</div>
+                <div className="font-medium text-white">{ns.workerName}</div>
                 <div className="text-sm text-zinc-400 mt-1">
-                  Work: {ns.works?.work_name || 'Unknown'} • Date: {ns.works?.date_work || 'N/A'}
+                  Work: {ns.workName} • Date: {ns.workDate}
                 </div>
                 <div className="text-xs text-zinc-500 mt-1">
-                  Reported by: {ns.works?.profiles?.username || 'Unknown Client'} • {new Date(ns.created_at).toLocaleDateString()}
+                  Reported by: {ns.clientName} • {new Date(ns.created_at).toLocaleDateString()}
                 </div>
               </div>
               <button
@@ -346,29 +358,24 @@ function UsersTab() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   async function loadUsers() {
     setLoading(true);
     const { data } = await supabase
       .from('profiles')
       .select('id, username, role, contact, slots, created_at')
       .order('created_at', { ascending: false });
-
     setUsers(data || []);
     setLoading(false);
   }
 
+  useEffect(() => { loadUsers(); }, []);
+
   const handleBan = async (userId, currentRole) => {
-    if (currentRole === 'admin') {
-      alert('Cannot ban admin accounts.');
-      return;
-    }
-    if (!confirm('Are you sure you want to ban this user? They will lose access to all features.')) return;
+    if (currentRole === 'admin') { alert('Cannot ban admin accounts.'); return; }
+    if (!confirm('Ban this user? They will lose access to all features.')) return;
     try {
-      await supabase.from('profiles').update({ role: 'banned' }).eq('id', userId);
+      const { error } = await supabase.from('profiles').update({ role: 'banned' }).eq('id', userId);
+      if (error) throw error;
       loadUsers();
     } catch (err) {
       alert('Failed: ' + err.message);
@@ -376,10 +383,10 @@ function UsersTab() {
   };
 
   const handleUnban = async (userId) => {
-    if (!confirm('Restore this user? They will regain access as a worker.')) return;
+    if (!confirm('Restore this user as a worker?')) return;
     try {
-      // Default to worker role on unban
-      await supabase.from('profiles').update({ role: 'worker' }).eq('id', userId);
+      const { error } = await supabase.from('profiles').update({ role: 'worker' }).eq('id', userId);
+      if (error) throw error;
       loadUsers();
     } catch (err) {
       alert('Failed: ' + err.message);
@@ -412,8 +419,7 @@ function UsersTab() {
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 p-4 border-b border-white/10 text-xs font-medium text-zinc-400 uppercase tracking-wider">
+        <div className="hidden md:grid grid-cols-12 p-4 border-b border-white/10 text-xs font-medium text-zinc-400 uppercase tracking-wider">
           <div className="col-span-3">Username</div>
           <div className="col-span-2">Role</div>
           <div className="col-span-2">Contact</div>
@@ -422,15 +428,14 @@ function UsersTab() {
           <div className="col-span-2 text-right">Action</div>
         </div>
 
-        {/* Table Body */}
         <div className="flex flex-col max-h-[500px] overflow-y-auto">
           {filteredUsers.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">No users found.</div>
           ) : (
             filteredUsers.map(user => (
-              <div key={user.id} className="grid grid-cols-12 p-4 border-b border-white/5 text-sm items-center hover:bg-white/5 transition-colors">
-                <div className="col-span-3 font-medium text-white truncate">{user.username || 'N/A'}</div>
-                <div className="col-span-2">
+              <div key={user.id} className="grid grid-cols-1 md:grid-cols-12 p-4 border-b border-white/5 text-sm items-center hover:bg-white/5 transition-colors gap-2">
+                <div className="md:col-span-3 font-medium text-white truncate">{user.username || 'N/A'}</div>
+                <div className="md:col-span-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${
                     user.role === 'client' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
                     user.role === 'worker' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' :
@@ -440,22 +445,16 @@ function UsersTab() {
                     {user.role}
                   </span>
                 </div>
-                <div className="col-span-2 text-zinc-400 truncate">{user.contact || '—'}</div>
-                <div className="col-span-1 text-zinc-400">{user.slots ?? 0}</div>
-                <div className="col-span-2 text-zinc-400 text-xs">{new Date(user.created_at).toLocaleDateString()}</div>
-                <div className="col-span-2 text-right">
+                <div className="md:col-span-2 text-zinc-400 truncate">{user.contact || '—'}</div>
+                <div className="md:col-span-1 text-zinc-400">{user.slots ?? 0}</div>
+                <div className="md:col-span-2 text-zinc-400 text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
+                <div className="md:col-span-2 md:text-right">
                   {user.role === 'banned' ? (
-                    <button
-                      onClick={() => handleUnban(user.id)}
-                      className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors"
-                    >
+                    <button onClick={() => handleUnban(user.id)} className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors">
                       Unban
                     </button>
                   ) : user.role !== 'admin' ? (
-                    <button
-                      onClick={() => handleBan(user.id, user.role)}
-                      className="px-3 py-1 bg-red-500/10 text-red-400 text-xs font-medium rounded-md hover:bg-red-500/20 transition-colors"
-                    >
+                    <button onClick={() => handleBan(user.id, user.role)} className="px-3 py-1 bg-red-500/10 text-red-400 text-xs font-medium rounded-md hover:bg-red-500/20 transition-colors">
                       Ban
                     </button>
                   ) : (
@@ -475,10 +474,9 @@ function UsersTab() {
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Listen for tab changes from parent Layout via custom events
   useEffect(() => {
     const handler = (e) => {
-      if (e.detail?.tab) setActiveTab(e.detail.tab);
+      if (e.detail && e.detail.tab) setActiveTab(e.detail.tab);
     };
     window.addEventListener('admin-tab-change', handler);
     return () => window.removeEventListener('admin-tab-change', handler);
