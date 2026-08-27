@@ -11,6 +11,7 @@ export function GetWorkView() {
   const [availableWorks, setAvailableWorks] = useState<any[]>([])
   const [appliedWorkIds, setAppliedWorkIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [workerSlots, setWorkerSlots] = useState(0)
 
   // Modal State
   const [selectedWork, setSelectedWork] = useState<any | null>(null)
@@ -78,6 +79,17 @@ export function GetWorkView() {
           if (appsData) {
             setAppliedWorkIds(new Set(appsData.map(a => a.work_id)))
           }
+
+          // Fetch worker's available slots
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('slots')
+            .eq('id', user.id)
+            .single()
+          
+          if (profileData) {
+            setWorkerSlots(profileData.slots || 0)
+          }
         }
 
         const formattedWorks = (worksData || []).map((w: any) => ({
@@ -107,6 +119,11 @@ export function GetWorkView() {
 
   const submitApplication = async () => {
     if (!selectedWork) return;
+
+    if (slotsTaken > workerSlots) {
+      alert(`You don't have enough slots. You have ${workerSlots} slot(s) available. Please buy more slots first.`)
+      return;
+    }
 
     if (slotsTaken > 1) {
       if (coWorkerNames.some(name => !name.trim())) {
@@ -142,6 +159,14 @@ export function GetWorkView() {
           throw error
         }
       } else {
+        // Deduct slots from worker's profile
+        const newSlots = workerSlots - slotsTaken
+        await supabase
+          .from('profiles')
+          .update({ slots: newSlots })
+          .eq('id', user.id)
+        
+        setWorkerSlots(newSlots)
         setAppliedWorkIds(prev => new Set(prev).add(selectedWork.id))
         closeModal()
       }
@@ -349,21 +374,33 @@ export function GetWorkView() {
                 <h3 className="flex items-center gap-2 font-semibold text-white mb-4">
                   <Users className="w-5 h-5 text-zinc-400" /> Application Details
                 </h3>
-                
+
+                {/* Slot Balance */}
+                <div className="bg-white/5 p-4 rounded-xl mb-6 flex justify-between items-center">
+                  <span className="text-sm text-zinc-400">Your Available Slots</span>
+                  <span className={`text-xl font-bold ${workerSlots > 0 ? 'text-white' : 'text-red-400'}`}>{workerSlots}</span>
+                </div>
+
+                {workerSlots === 0 ? (
+                  <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-red-400 text-sm text-center">
+                    You have no slots available. Please buy slots first before applying.
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm text-zinc-400 mb-2">
-                      How many slots do you want to take? (Max: {selectedWork.slots})
+                      How many slots do you want to take? (Max: {Math.min(selectedWork.slots, workerSlots)})
                     </label>
                     <select
                       value={slotsTaken}
                       onChange={(e) => handleSlotChange(Number(e.target.value))}
                       className="w-full sm:w-1/2 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30"
                     >
-                      {Array.from({ length: selectedWork.slots }, (_, i) => i + 1).map(num => (
+                      {Array.from({ length: Math.min(selectedWork.slots, workerSlots) }, (_, i) => i + 1).map(num => (
                         <option key={num} value={num} className="bg-zinc-900">{num} Slot{num > 1 ? 's' : ''}</option>
                       ))}
                     </select>
+                    <p className="text-xs text-zinc-500 mt-2">After applying: {workerSlots - slotsTaken} slot(s) remaining</p>
                   </div>
 
                   {slotsTaken > 1 && (
@@ -395,6 +432,7 @@ export function GetWorkView() {
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
             </div>

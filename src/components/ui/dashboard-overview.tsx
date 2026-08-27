@@ -311,7 +311,8 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
     completed: 0,
     credited: 0,
     pending: 0,
-    rating: 0
+    rating: 0,
+    availableSlots: 0
   });
 
   const [selectedWork, setSelectedWork] = useState<any | null>(null);
@@ -320,6 +321,13 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
     async function loadWorkerDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch worker's slot balance
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('slots')
+        .eq('id', user.id)
+        .single();
 
       const { data: appsData, error } = await supabase
         .from('applications')
@@ -388,7 +396,8 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
           completed,
           credited: creditedPay,
           pending: pendingPay,
-          rating: 0 // Mock for now until reviews are implemented
+          rating: 0,
+          availableSlots: profileData?.slots || 0
         });
 
         setMyWorks(formattedWorks);
@@ -441,7 +450,7 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
         />
         <DashboardMetricCard
           title="Available Slots"
-          value="0"
+          value={metrics.availableSlots.toString()}
           icon={Ticket}
           trendType="neutral"
         />
