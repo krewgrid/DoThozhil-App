@@ -168,7 +168,7 @@ export function PostWorkView() {
                 <Field>
                     <FieldLabel htmlFor="payment-credit">Payment will Credit on</FieldLabel>
                     <FieldContent>
-                    <Input id="payment-credit" value={paymentCredit} onChange={(e) => setPaymentCredit(e.target.value)} placeholder="e.g. Within 2 days of completion" />
+                    <Input id="payment-credit" value={paymentCredit} onChange={(e) => setPaymentCredit(e.target.value)} type="date" />
                     </FieldContent>
                 </Field>
             </div>
