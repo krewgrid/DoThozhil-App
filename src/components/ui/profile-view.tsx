@@ -17,7 +17,8 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
     contactNumber: "Loading...",
     whatsappNumber: "Loading...",
     accountType: role === "client" ? "Client" : "Worker",
-    joinedDate: "Loading..."
+    joinedDate: "Loading...",
+    referralCode: "Loading..."
   })
 
   useEffect(() => {
@@ -43,7 +44,8 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
               contactNumber: profile.contact || "Not provided",
               whatsappNumber: profile.whatsapp || "Not provided",
               accountType: profile.role === "client" ? "Client" : profile.role === "worker" ? "Worker" : "Admin",
-              joinedDate: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+              joinedDate: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+              referralCode: profile.referral_code || "None"
             })
           }
         }
@@ -55,7 +57,8 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
           contactNumber: "Error",
           whatsappNumber: "Error",
           accountType: "Error",
-          joinedDate: "Error"
+          joinedDate: "Error",
+          referralCode: "Error"
         })
       } finally {
         setLoading(false)
@@ -132,6 +135,14 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
             <div className="flex flex-col gap-1 p-4 rounded-xl border border-white/10 bg-white/5">
               <span className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Member Since</span>
               <span className="text-white font-medium">{userDetails.joinedDate}</span>
+            </div>
+          </div>
+          
+          <div className="mt-8 border-t border-white/10 pt-8">
+            <h3 className="text-lg font-semibold text-white mb-2">Referral Code</h3>
+            <p className="text-sm text-zinc-400 mb-4">Share this code with friends. When they sign up, you both get 5 free slots!</p>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 max-w-sm">
+              <span className="text-xl text-white font-mono font-bold tracking-widest">{userDetails.referralCode}</span>
             </div>
           </div>
 
