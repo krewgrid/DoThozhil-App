@@ -8,6 +8,8 @@ const Layout = ({ role }) => {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
 
+  const [adminTab, setAdminTab] = React.useState('overview');
+
   useEffect(() => {
     checkSession();
   }, []);
@@ -28,20 +30,18 @@ const Layout = ({ role }) => {
     }
   };
 
+  const handleAdminTabClick = (tab) => {
+    setAdminTab(tab);
+    window.dispatchEvent(new CustomEvent('admin-tab-change', { detail: { tab } }));
+  };
+
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-muted)' }}>Loading securely...</div>;
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#000', color: '#aaa' }}>Loading securely...</div>;
   }
   
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login');
-  };
-
-  const [adminTab, setAdminTab] = React.useState('overview');
-
-  const handleAdminTabClick = (tab) => {
-    setAdminTab(tab);
-    window.dispatchEvent(new CustomEvent('admin-tab-change', { detail: { tab } }));
   };
 
   if (role === 'admin') {
