@@ -394,9 +394,10 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
 
   useEffect(() => {
     async function fetchCount() {
-      const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'worker');
-      if (count !== null) {
-        setWorkerCount(count);
+      // Use the secure RPC function to bypass RLS for anonymous users
+      const { data, error } = await supabase.rpc('get_worker_count');
+      if (!error && data !== null) {
+        setWorkerCount(data);
       }
     }
     fetchCount();
