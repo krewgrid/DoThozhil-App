@@ -37,18 +37,42 @@ const Layout = ({ role }) => {
     navigate('/login');
   };
 
+  const [adminTab, setAdminTab] = React.useState('overview');
+
+  const handleAdminTabClick = (tab) => {
+    setAdminTab(tab);
+    window.dispatchEvent(new CustomEvent('admin-tab-change', { detail: { tab } }));
+  };
+
   if (role === 'admin') {
+    const adminNavItems = [
+      { id: 'overview', label: 'Overview', icon: '📊' },
+      { id: 'disputes', label: 'Disputes', icon: '⚖️' },
+      { id: 'no-shows', label: 'No-Shows', icon: '⚠️' },
+      { id: 'users', label: 'Users', icon: '👥' },
+    ];
+
     return (
       <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
         <div className="flex h-screen">
           {/* Admin Sidebar */}
           <div className="w-64 border-r border-white/10 bg-zinc-950 p-6 flex flex-col gap-6">
             <div className="text-xl font-bold tracking-tight">krewgrid control</div>
-            <nav className="flex flex-col gap-2 flex-1">
-              <div className="px-3 py-2 rounded-md bg-white/10 text-white font-medium text-sm cursor-pointer">Overview</div>
-              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">Disputes</div>
-              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">No-Shows</div>
-              <div className="px-3 py-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 font-medium text-sm cursor-pointer transition-colors">Users</div>
+            <nav className="flex flex-col gap-1 flex-1">
+              {adminNavItems.map(item => (
+                <div
+                  key={item.id}
+                  onClick={() => handleAdminTabClick(item.id)}
+                  className={`px-3 py-2.5 rounded-md font-medium text-sm cursor-pointer transition-colors flex items-center gap-3 ${
+                    adminTab === item.id
+                      ? 'bg-white/10 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                </div>
+              ))}
             </nav>
             <button onClick={handleSignOut} className="px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-red-400/10 font-medium text-sm text-left transition-colors">
               Sign Out
