@@ -16,6 +16,82 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
+function CustomTimePicker({ value, onChange }: { value: string, onChange: (val: string) => void }) {
+  const [hour, setHour] = useState("10")
+  const [minute, setMinute] = useState("00")
+  const [ampm, setAmpm] = useState("AM")
+
+  useEffect(() => {
+    if (value) {
+      const [h, m] = value.split(":")
+      let hourNum = parseInt(h, 10)
+      if (hourNum >= 12) {
+        setAmpm("PM")
+        if (hourNum > 12) hourNum -= 12
+      } else {
+        setAmpm("AM")
+        if (hourNum === 0) hourNum = 12
+      }
+      setHour(hourNum.toString().padStart(2, '0'))
+      setMinute(m)
+    }
+  }, [value])
+
+  const updateTime = (newHour: string, newMinute: string, newAmpm: string) => {
+    let h = parseInt(newHour, 10)
+    if (newAmpm === "PM" && h < 12) h += 12
+    if (newAmpm === "AM" && h === 12) h = 0
+    onChange(`${h.toString().padStart(2, '0')}:${newMinute}`)
+  }
+
+  // Ensure initial value is set if empty
+  useEffect(() => {
+    if (!value) {
+      updateTime(hour, minute, ampm)
+    }
+  }, [])
+
+  return (
+    <div className="flex gap-2">
+      <select 
+        value={hour} 
+        onChange={(e) => { 
+          setHour(e.target.value); 
+          updateTime(e.target.value, minute, ampm); 
+        }}
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {Array.from({length: 12}, (_, i) => i + 1).map(h => (
+          <option key={h} value={h.toString().padStart(2, '0')} className="bg-zinc-900">{h.toString().padStart(2, '0')}</option>
+        ))}
+      </select>
+      <select 
+        value={minute} 
+        onChange={(e) => { 
+          setMinute(e.target.value); 
+          updateTime(hour, e.target.value, ampm); 
+        }}
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {Array.from({length: 60}, (_, i) => i).map(m => (
+          <option key={m} value={m.toString().padStart(2, '0')} className="bg-zinc-900">{m.toString().padStart(2, '0')}</option>
+        ))}
+      </select>
+      <select 
+        value={ampm} 
+        onChange={(e) => { 
+          setAmpm(e.target.value); 
+          updateTime(hour, minute, e.target.value); 
+        }}
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <option value="AM" className="bg-zinc-900">AM</option>
+        <option value="PM" className="bg-zinc-900">PM</option>
+      </select>
+    </div>
+  )
+}
+
 export function PostWorkView() {
   const [requirePhoto, setRequirePhoto] = useState(false)
   const [requireApproval, setRequireApproval] = useState(false)
@@ -145,7 +221,7 @@ export function PostWorkView() {
                 <Field>
                     <FieldLabel htmlFor="reporting-time">Starting Time</FieldLabel>
                     <FieldContent>
-                    <Input id="reporting-time" value={reportingTime} onChange={(e) => setReportingTime(e.target.value)} type="time" />
+                      <CustomTimePicker value={reportingTime} onChange={setReportingTime} />
                     </FieldContent>
                 </Field>
 
