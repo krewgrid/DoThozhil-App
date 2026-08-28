@@ -134,20 +134,31 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
       // Let's set a manual timeout so it doesn't hang forever
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase Auth Timeout (10 seconds)")), 10000));
       
-      console.log("3. Calling supabase.auth.signInWithPassword...");
+      console.log("3. Calling manual fetch to Supabase Auth...");
       
-      // Race the auth call against a 10 second timeout
-      const authPromise = supabase.auth.signInWithPassword({ email, password });
-      const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+      const authUrl = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/token?grant_type=password`;
+      const authPromise = fetch(authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ email, password })
+      }).then(res => res.json());
 
-      console.log("4. Auth Call Finished!", { data, error });
+      const result = await Promise.race([authPromise, timeoutPromise]) as any;
 
-      if (error) {
-        console.error("Auth Error:", error);
-        setErrorMsg(error.message);
+      console.log("4. Auth Call Finished!", result);
+
+      if (result.error || result.error_description || result.code) {
+        console.error("Auth Error:", result);
+        setErrorMsg(result.error_description || result.msg || result.message || "Invalid login credentials");
         setLoadingStep('');
         return;
       }
+      
+      const data = { user: result.user };
+      const error = null;
 
       setLoadingStep('Loading profile...');
       const userMeta = data.user?.user_metadata || {};
@@ -514,7 +525,16 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
         <span className="text-2xl font-bold tracking-tight">krewgrid</span>
       </div>
 
-      <div className="flex min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
+      <div className="flex flex-col min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
+        
+        {/* DIAGNOSTICS PANEL - VISIBLE FOR DEBUGGING */}
+        <div className="w-full max-w-[350px] mb-8 p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs rounded-md break-all">
+          <strong>System Diagnostics:</strong><br/>
+          URL: {import.meta.env.VITE_SUPABASE_URL ? `"${import.meta.env.VITE_SUPABASE_URL}"` : 'MISSING'}<br/>
+          Key Length: {import.meta.env.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY.length : 0}<br/>
+          Supabase Client: {supabase ? 'Initialized' : 'NULL'}
+        </div>
+
         <AuthFormContainer mode={mode} setMode={setMode} onLogin={onLogin} />
       </div>
 
