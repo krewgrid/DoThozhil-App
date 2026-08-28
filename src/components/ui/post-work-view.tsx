@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 
 import {
@@ -14,6 +14,82 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+
+function LocationAutocomplete({ value, onChange, placeholder }: { value: string, onChange: (val: string) => void, placeholder?: string }) {
+  const [query, setQuery] = useState(value);
+  const [results, setResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (!query || query.length < 3 || query === value) {
+      setResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=` + encodeURIComponent(query) + `&limit=5&addressdetails=1`);
+        const data = await res.json();
+        setResults(data);
+        setShowDropdown(true);
+      } catch (err) {
+        console.error("Geocoding error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const handleSelect = (item: any) => {
+    setQuery(item.display_name);
+    onChange(item.display_name);
+    setShowDropdown(false);
+  };
+
+  return (
+    <div className="relative w-full" ref={wrapperRef}>
+      <Input 
+        type="text" 
+        value={query} 
+        onChange={(e) => {
+           setQuery(e.target.value);
+           if (!e.target.value) onChange('');
+        }} 
+        onFocus={() => { if(results.length > 0) setShowDropdown(true); }}
+        placeholder={placeholder} 
+      />
+      {loading && <div className="absolute right-3 top-2.5 h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />}
+      {showDropdown && results.length > 0 && (
+        <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-auto rounded-md bg-zinc-900 border border-zinc-800 shadow-lg text-sm">
+          {results.map((item, i) => (
+            <li 
+              key={i} 
+              className="px-3 py-2 cursor-pointer hover:bg-zinc-800 text-zinc-300 border-b border-zinc-800/50 last:border-0"
+              onClick={() => handleSelect(item)}
+            >
+              {item.display_name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function CustomTimePicker({ value, onChange }: { value: string, onChange: (val: string) => void }) {
   const [hour, setHour] = useState("10")
@@ -209,7 +285,7 @@ export function PostWorkView() {
                 <Field>
                 <FieldLabel htmlFor="location">Location</FieldLabel>
                 <FieldContent>
-                  <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Full address of the venue" />
+                  <LocationAutocomplete value={location} onChange={setLocation} placeholder="Search venue location..." />
                 </FieldContent>
                 </Field>
             </div>

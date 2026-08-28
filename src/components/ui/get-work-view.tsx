@@ -353,7 +353,15 @@ export function GetWorkView() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-300">
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-zinc-500" /> {work.location}</span>
+                    <a 
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(work.location)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-1 hover:text-emerald-400 hover:underline transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MapPin className="w-3 h-3 text-emerald-500/70" /> {work.location}
+                    </a>
                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3 text-zinc-500" /> {new Date(work.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                 </div>
@@ -410,7 +418,14 @@ export function GetWorkView() {
                   <div className="flex items-center gap-2 text-zinc-400 mb-1">
                     <MapPin className="w-4 h-4" /> Location
                   </div>
-                  <div className="font-medium">{selectedWork.location}</div>
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedWork.location)}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="font-medium hover:text-emerald-400 hover:underline transition-colors block"
+                  >
+                    {selectedWork.location}
+                  </a>
                 </div>
                 <div className="bg-white/5 p-4 rounded-xl">
                   <div className="flex items-center gap-2 text-zinc-400 mb-1">

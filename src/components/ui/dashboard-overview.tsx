@@ -371,12 +371,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
             <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar">
               
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-white/5 p-4 rounded-xl">
-                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
-                    <MapPin className="w-4 h-4" /> Location
-                  </div>
-                  <div className="font-medium text-white">{selectedWork.location}</div>
-                </div>
+                <div className="bg-white/5 p-4 rounded-xl"><div className="flex items-center gap-2 text-zinc-400 mb-1"><MapPin className="w-4 h-4" /> Location</div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedWork.location)}`} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-emerald-400 hover:underline transition-colors block text-white">{selectedWork.location}</a></div>
                 <div className="bg-white/5 p-4 rounded-xl">
                   <div className="flex items-center gap-2 text-zinc-400 mb-1">
                     <Calendar className="w-4 h-4" /> Date & Days
@@ -736,12 +731,7 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
             <div className="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar">
               
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-white/5 p-4 rounded-xl">
-                  <div className="flex items-center gap-2 text-zinc-400 mb-1">
-                    <MapPin className="w-4 h-4" /> Location
-                  </div>
-                  <div className="font-medium text-white">{selectedWork.location}</div>
-                </div>
+                <div className="bg-white/5 p-4 rounded-xl"><div className="flex items-center gap-2 text-zinc-400 mb-1"><MapPin className="w-4 h-4" /> Location</div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedWork.location)}`} target="_blank" rel="noopener noreferrer" className="font-medium hover:text-emerald-400 hover:underline transition-colors block text-white">{selectedWork.location}</a></div>
                 <div className="bg-white/5 p-4 rounded-xl">
                   <div className="flex items-center gap-2 text-zinc-400 mb-1">
                     <Calendar className="w-4 h-4" /> Date & Days
@@ -803,3 +793,4 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
     </div>
   );
 };
+
