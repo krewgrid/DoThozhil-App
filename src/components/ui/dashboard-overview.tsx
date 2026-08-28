@@ -77,6 +77,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => void }) => {
+  const [loading, setLoading] = useState(true);
   const [recentWorks, setRecentWorks] = useState<any[]>([]);
   const [metrics, setMetrics] = useState({
     totalWorks: 0,
@@ -93,47 +94,52 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch client's average rating
-      const { data: clientReviews } = await supabase
-        .from('reviews')
-        .select('rating')
-        .eq('reviewee_id', user.id)
+      // Fetch client's average rating and works in parallel
+      const [clientReviewsResponse, worksDataResponse] = await Promise.all([
+        supabase
+          .from('reviews')
+          .select('rating')
+          .eq('reviewee_id', user.id),
+        supabase
+          .from('works')
+          .select(`
+            id, 
+            work_name, 
+            status, 
+            created_at, 
+            slots,
+            location,
+            date_work,
+            reporting_time,
+            completion_time,
+            payment_amount,
+            instruction,
+            days,
+            require_approval,
+            applications ( 
+              id, 
+              worker_id,
+              slots_taken, 
+              status,
+              photo_url,
+              co_worker_names,
+              profiles ( username, contact )
+            )
+          `)
+          .eq('client_id', user.id)
+          .order('created_at', { ascending: false })
+      ]);
       
+      const { data: clientReviews } = clientReviewsResponse;
+      const { data: worksData, error } = worksDataResponse;
+
       const avgRating = clientReviews && clientReviews.length > 0
         ? Math.round(clientReviews.reduce((s: number, r: any) => s + r.rating, 0) / clientReviews.length * 10) / 10
         : null;
 
-      const { data: worksData, error } = await supabase
-        .from('works')
-        .select(`
-          id, 
-          work_name, 
-          status, 
-          created_at, 
-          slots,
-          location,
-          date_work,
-          reporting_time,
-          completion_time,
-          payment_amount,
-          instruction,
-          days,
-          require_approval,
-          applications ( 
-            id, 
-            worker_id,
-            slots_taken, 
-            status,
-            photo_url,
-            co_worker_names,
-            profiles ( username, contact )
-          )
-        `)
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false });
-
       if (error) {
         console.error("Dashboard fetch error:", error);
+        setLoading(false);
         return;
       }
 
@@ -178,6 +184,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
         
         setRecentWorks(works);
       }
+      setLoading(false);
     }
     loadDashboard();
   }, []);
@@ -250,6 +257,14 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
     }
   };
 
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center pt-40">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-2">
@@ -305,7 +320,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
       <div className="mt-8">
         <h3 className="text-xl font-semibold text-white mb-4">Recent Works</h3>
         <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-md overflow-hidden shadow-xl">
-            <div className="grid grid-cols-4 p-4 border-b border-white/10 text-sm font-medium text-zinc-300">
+            <div className="hidden md:grid grid-cols-4 p-4 border-b border-white/10 text-sm font-medium text-zinc-300">
                 <div>Work ID</div>
                 <div className="col-span-2">Name</div>
                 <div>Status</div>
@@ -318,11 +333,12 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
                     <div 
                       key={work.id} 
                       onClick={() => setSelectedWork(work)}
-                      className="grid grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      className="grid grid-cols-1 md:grid-cols-4 p-4 border-b border-white/5 last:border-0 text-sm text-white hover:bg-white/10 transition-colors cursor-pointer gap-2 md:gap-0"
                     >
-                        <div className="text-zinc-400 font-mono">WRK-{work.id}</div>
-                        <div className="col-span-2 font-medium">{work.name}</div>
+                        <div className="text-zinc-400 font-mono"><span className="md:hidden text-zinc-500 mr-2">ID:</span>WRK-{work.id}</div>
+                        <div className="col-span-1 md:col-span-2 font-medium"><span className="md:hidden text-zinc-500 mr-2">Name:</span>{work.name}</div>
                         <div>
+                            <span className="md:hidden text-zinc-500 mr-2">Status:</span>
                             <span className={cn(
                                 "px-2 py-1 rounded-full text-xs font-medium border",
                                 work.status === "Active" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-zinc-500/20 text-zinc-300 border-zinc-500/30"
@@ -496,6 +512,7 @@ export const ClientDashboardOverview = ({ onPostWork }: { onPostWork?: () => voi
 
 
 export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void }) => {
+  const [loading, setLoading] = useState(true);
   const [myWorks, setMyWorks] = useState<any[]>([]);
   const [metrics, setMetrics] = useState({
     completed: 0,
@@ -512,39 +529,44 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch worker's slot balance
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('slots')
-        .eq('id', user.id)
-        .single();
+      // Fetch worker's slot balance and applications in parallel
+      const [profileResponse, appsResponse] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('slots')
+          .eq('id', user.id)
+          .single(),
+        supabase
+          .from('applications')
+          .select(`
+            id,
+            status,
+            slots_taken,
+            co_worker_names,
+            created_at,
+            works (
+              work_name,
+              date_work,
+              reporting_time,
+              completion_time,
+              payment_amount,
+              location,
+              instruction,
+              days,
+              slots,
+              profiles ( username )
+            )
+          `)
+          .eq('worker_id', user.id)
+          .order('created_at', { ascending: false })
+      ]);
 
-      const { data: appsData, error } = await supabase
-        .from('applications')
-        .select(`
-          id,
-          status,
-          slots_taken,
-          co_worker_names,
-          created_at,
-          works (
-            work_name,
-            date_work,
-            reporting_time,
-            completion_time,
-            payment_amount,
-            location,
-            instruction,
-            days,
-            slots,
-            profiles ( username )
-          )
-        `)
-        .eq('worker_id', user.id)
-        .order('created_at', { ascending: false });
+      const { data: profileData } = profileResponse;
+      const { data: appsData, error } = appsResponse;
 
       if (error) {
         console.error("Worker dashboard fetch error:", error);
+        setLoading(false);
         return;
       }
 
@@ -592,9 +614,18 @@ export const WorkerDashboardOverview = ({ onGetWork }: { onGetWork?: () => void 
 
         setMyWorks(formattedWorks);
       }
+      setLoading(false);
     }
     loadWorkerDashboard();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center pt-40">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full flex flex-col gap-6 relative z-10 pt-24 px-4 sm:px-6 md:px-10 pb-8 h-full overflow-y-auto max-w-7xl mx-auto">

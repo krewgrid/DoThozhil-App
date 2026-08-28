@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, AlertTriangle, Scale, Ban, ShieldCheck, ChevronRight, Eye, CheckCircle, XCircle } from 'lucide-react';
+import { Users, AlertTriangle, Scale, Ban, ShieldCheck, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 // ─── Overview Tab ───────────────────────────────────────────────
@@ -11,31 +11,18 @@ function OverviewTab() {
   useEffect(() => {
     async function loadOverview() {
       try {
-        const { count: disputeCount } = await supabase
-          .from('disputes')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'open');
-
-        const { count: noShowCount } = await supabase
-          .from('applications')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'no-show');
-
-        const { count: bannedCount } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('role', 'banned');
-
-        const { count: activeCount } = await supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .neq('role', 'banned');
+        const [disputesResult, noShowsResult, bannedResult, activeResult] = await Promise.all([
+          supabase.from('disputes').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+          supabase.from('applications').select('id', { count: 'exact', head: true }).eq('status', 'no-show'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'banned'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).neq('role', 'banned')
+        ]);
 
         setStats({
-          openDisputes: disputeCount || 0,
-          pendingNoShows: noShowCount || 0,
-          bannedUsers: bannedCount || 0,
-          activeUsers: activeCount || 0,
+          openDisputes: disputesResult.count || 0,
+          pendingNoShows: noShowsResult.count || 0,
+          bannedUsers: bannedResult.count || 0,
+          activeUsers: activeResult.count || 0,
         });
       } catch (err) {
         console.error('Admin overview error:', err);
@@ -497,7 +484,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto flex flex-col gap-8 h-full overflow-y-auto">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto flex flex-col gap-8 h-full overflow-y-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">

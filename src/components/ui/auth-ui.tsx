@@ -392,7 +392,7 @@ export type AuthMode = "signIn" | "roleSelection" | "signUpClient" | "signUpWork
 
 function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode: (mode: AuthMode) => void; onLogin?: (role: "client" | "worker" | "admin") => void; }) {
     return (
-        <div className="mx-auto grid w-[350px] gap-2">
+        <div className="mx-auto grid w-full max-w-[350px] gap-2">
             {mode === "signIn" && <SignInForm onLogin={onLogin || (() => {})} />}
             {mode === "roleSelection" && <RoleSelection onSelectRole={(role) => setMode(role === "client" ? "signUpClient" : "signUpWorker")} />}
             {mode === "signUpClient" && <ClientSignUpForm onLogin={onLogin || (() => {})} />}
@@ -450,7 +450,7 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
         <span className="text-2xl font-bold tracking-tight">krewgrid</span>
       </div>
 
-      <div className="flex h-screen items-center justify-center p-6 md:h-auto md:p-0 md:py-12 bg-background">
+      <div className="flex min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
         <AuthFormContainer mode={mode} setMode={setMode} onLogin={onLogin} />
       </div>
 

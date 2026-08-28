@@ -9,6 +9,7 @@ const Layout = ({ role }) => {
   const [loading, setLoading] = useState(true);
 
   const [adminTab, setAdminTab] = React.useState('overview');
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   useEffect(() => {
     checkSession();
@@ -56,7 +57,7 @@ const Layout = ({ role }) => {
       <div className="min-h-screen bg-black text-white font-sans selection:bg-white/30">
         <div className="flex h-screen">
           {/* Admin Sidebar */}
-          <div className="w-64 border-r border-white/10 bg-zinc-950 p-6 flex flex-col gap-6">
+          <div className="hidden md:flex md:w-64 md:flex-col border-r border-white/10 bg-zinc-950 p-6 gap-6">
             <div className="text-xl font-bold tracking-tight">krewgrid control</div>
             <nav className="flex flex-col gap-1 flex-1">
               {adminNavItems.map(item => (
@@ -78,8 +79,45 @@ const Layout = ({ role }) => {
               Sign Out
             </button>
           </div>
+
+          {/* Mobile Drawer */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 flex md:hidden">
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+              <div className="relative w-64 h-full bg-zinc-950 border-r border-white/10 p-6 flex flex-col gap-6 shadow-2xl">
+                <div className="text-xl font-bold tracking-tight">krewgrid control</div>
+                <nav className="flex flex-col gap-1 flex-1">
+                  {adminNavItems.map(item => (
+                    <div
+                      key={item.id}
+                      onClick={() => { handleAdminTabClick(item.id); setSidebarOpen(false); }}
+                      className={`px-3 py-2.5 rounded-md font-medium text-sm cursor-pointer transition-colors flex items-center gap-3 ${
+                        adminTab === item.id
+                          ? 'bg-white/10 text-white'
+                          : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <span>{item.icon}</span>
+                      {item.label}
+                    </div>
+                  ))}
+                </nav>
+                <button onClick={handleSignOut} className="px-3 py-2 rounded-md text-red-400 hover:text-red-300 hover:bg-red-400/10 font-medium text-sm text-left transition-colors">
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Admin Content */}
-          <div className="flex-1 overflow-auto bg-zinc-950/50">
+          <div className="flex-1 overflow-auto bg-zinc-950/50 flex flex-col">
+            {/* Mobile Header */}
+            <div className="md:hidden flex items-center p-4 border-b border-white/10 bg-zinc-950">
+              <button onClick={() => setSidebarOpen(true)} className="p-2 -ml-2 text-zinc-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+              <div className="ml-2 font-bold">krewgrid control</div>
+            </div>
             <Outlet />
           </div>
         </div>

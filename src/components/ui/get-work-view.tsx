@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { ArrowLeft, Search, MapPin, Calendar, IndianRupee, SlidersHorizontal, Check, X, Clock, FileText, AlertTriangle, Users, Star } from "lucide-react"
+import { Search, MapPin, Calendar, IndianRupee, Check, X, Clock, FileText, AlertTriangle, Users, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/lib/supabase"
 
@@ -59,30 +59,43 @@ export function GetWorkView() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         
-        // Fetch open works with client username and all details
-        const { data: worksData, error: worksError } = await supabase
-          .from('works')
-          .select(`
-            id,
-            work_name,
-            location,
-            date_work,
-            payment_amount,
-            slots,
-            instruction,
-            days,
-            reporting_time,
-            completion_time,
-            require_photo,
-            require_approval,
-            client_id,
-            profiles (
-              username
-            )
-          `)
-          .eq('status', 'open')
+        // Run all independent queries in parallel
+        const [worksResult, appsResult, profileResult] = await Promise.all([
+          supabase
+            .from('works')
+            .select(`
+              id,
+              work_name,
+              location,
+              date_work,
+              payment_amount,
+              slots,
+              instruction,
+              days,
+              reporting_time,
+              completion_time,
+              require_photo,
+              require_approval,
+              client_id,
+              profiles (
+                username
+              )
+            `)
+            .eq('status', 'open'),
+          user ? supabase.from('applications').select('work_id').eq('worker_id', user.id) : Promise.resolve({ data: null }),
+          user ? supabase.from('profiles').select('slots').eq('id', user.id).single() : Promise.resolve({ data: null })
+        ])
 
+        const { data: worksData, error: worksError } = worksResult
         if (worksError) throw worksError
+
+        // Process apps and profile data
+        if (appsResult.data) {
+          setAppliedWorkIds(new Set(appsResult.data.map((a: any) => a.work_id)))
+        }
+        if (profileResult.data) {
+          setWorkerSlots(profileResult.data.slots || 0)
+        }
 
         // Fetch client ratings
         const clientIds = [...new Set((worksData || []).map((w: any) => w.client_id))]
@@ -103,29 +116,6 @@ export function GetWorkView() {
             Object.keys(sums).forEach(id => {
               clientRatings[id] = Math.round((sums[id].total / sums[id].count) * 10) / 10
             })
-          }
-        }
-
-        // Fetch user's applications to know what they already applied to
-        if (user) {
-          const { data: appsData } = await supabase
-            .from('applications')
-            .select('work_id')
-            .eq('worker_id', user.id)
-          
-          if (appsData) {
-            setAppliedWorkIds(new Set(appsData.map(a => a.work_id)))
-          }
-
-          // Fetch worker's available slots
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('slots')
-            .eq('id', user.id)
-            .single()
-          
-          if (profileData) {
-            setWorkerSlots(profileData.slots || 0)
           }
         }
 
@@ -222,7 +212,8 @@ export function GetWorkView() {
           worker_id: user.id,
           slots_taken: slotsTaken,
           co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null,
-          photo_url: photoUrl
+          photo_url: photoUrl,
+          status: selectedWork.requireApproval ? 'pending' : 'approved'
         })
 
       if (error) {
@@ -234,22 +225,6 @@ export function GetWorkView() {
           throw error
         }
       } else {
-        // If no approval required, auto-approve the application
-        if (!selectedWork.requireApproval) {
-          const { data: insertedApp } = await supabase
-            .from('applications')
-            .select('id')
-            .eq('work_id', selectedWork.id)
-            .eq('worker_id', user.id)
-            .single()
-          
-          if (insertedApp) {
-            await supabase
-              .from('applications')
-              .update({ status: 'approved' })
-              .eq('id', insertedApp.id)
-          }
-        }
 
         // Deduct slots from worker's profile
         const newSlots = workerSlots - slotsTaken

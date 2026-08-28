@@ -76,14 +76,14 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
 
         {/* Navbar */}
         <nav className="absolute left-1/2 top-0 z-20 -translate-x-1/2 w-full flex justify-center mt-2">
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2 md:gap-4 rounded-full bg-black/60 backdrop-blur-lg px-2 py-2 md:px-4 max-w-[95%] border border-white/10">
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 rounded-full bg-black/60 backdrop-blur-lg px-2 py-2 md:px-4 max-w-[95%] border border-white/10 overflow-x-auto scrollbar-hide">
             {navItems.map((item) => {
               if (item === "Sign Out") {
                 return (
                   <button
                     key={item}
                     onClick={onSignOut}
-                    className="text-[10px] transition-colors duration-300 ease-out sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border border-transparent text-[#E1E0CC]/80 hover:bg-zinc-500/30 hover:border-white/10 hover:text-white"
+                    className="text-[10px] transition-colors duration-300 ease-out sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border border-transparent text-[#E1E0CC]/80 hover:bg-zinc-500/30 hover:border-white/10 hover:text-white shrink-0"
                   >
                     {item}
                   </button>
@@ -97,7 +97,7 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                     e.preventDefault();
                     if (onNavClick) onNavClick(item);
                   }}
-                  className={`text-[10px] transition-colors duration-300 ease-out sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border ${
+                  className={`text-[10px] transition-colors duration-300 ease-out sm:text-xs md:text-sm whitespace-nowrap px-3 py-1.5 rounded-full border shrink-0 ${
                     isActive 
                       ? 'bg-zinc-500/30 text-white border-white/10 shadow-sm' 
                       : 'border-transparent text-[#E1E0CC]/80 hover:bg-zinc-500/30 hover:border-white/10 hover:text-white'

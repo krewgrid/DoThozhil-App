@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { ArrowLeft, Upload, User, KeyRound, Check } from "lucide-react"
+import { Upload, User, KeyRound, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
@@ -79,8 +79,30 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
     }
   }
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const [passwordError, setPasswordError] = useState("")
+
+  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setPasswordError("")
+    const formData = new FormData(e.currentTarget)
+    const newPassword = formData.get("new-password") as string
+    const confirmPassword = formData.get("confirm-password") as string
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.")
+      return
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.")
+      return
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) {
+      setPasswordError(error.message)
+      return
+    }
+
     setIsChangingPassword(false)
     setPasswordSuccess(true)
     setTimeout(() => setPasswordSuccess(false), 3000)
@@ -166,17 +188,18 @@ export function ProfileView({ onBack, role }: { onBack: () => void, role: "clien
               </button>
             ) : (
               <form onSubmit={handlePasswordSubmit} className="max-w-sm flex flex-col gap-4 p-4 rounded-xl border border-white/10 bg-white/5">
-                <div>
-                  <label className="text-xs text-zinc-400 font-medium mb-1 block">Current Password</label>
-                  <Input type="password" required className="bg-black/40 border-white/10 text-white" />
-                </div>
+                {passwordError && (
+                  <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-sm text-red-300">
+                    {passwordError}
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-zinc-400 font-medium mb-1 block">New Password</label>
-                  <Input type="password" required className="bg-black/40 border-white/10 text-white" />
+                  <Input name="new-password" type="password" required className="bg-black/40 border-white/10 text-white" />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 font-medium mb-1 block">Confirm New Password</label>
-                  <Input type="password" required className="bg-black/40 border-white/10 text-white" />
+                  <Input name="confirm-password" type="password" required className="bg-black/40 border-white/10 text-white" />
                 </div>
                 <div className="flex items-center gap-3 mt-2">
                   <button 
