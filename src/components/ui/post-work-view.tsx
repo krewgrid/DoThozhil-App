@@ -42,7 +42,9 @@ function LocationAutocomplete({ value, onChange, placeholder }: { value: string,
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=` + encodeURIComponent(query) + `&limit=5&addressdetails=1`);
+        const searchQuery = query.toLowerCase().includes('kerala') ? query : `${query}, Kerala`;
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5&addressdetails=1&countrycodes=in&viewbox=75.8,10.3,76.6,9.8`;
+        const res = await fetch(url);
         const data = await res.json();
         setResults(data);
         setShowDropdown(true);
