@@ -189,11 +189,11 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
 
 function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
 
   const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault(); 
-    setLoading(true);
+    setLoadingStep('Starting...');
     setErrorMsg('');
     
     try {
@@ -205,14 +205,16 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       if (!supabase) throw new Error('Database connection error. Missing configuration.');
 
       // 1. Check if username is available
+      setLoadingStep('Checking username...');
       const { data: isAvailable, error: checkError } = await supabase.rpc('check_username_available', { check_username: username });
       if (!isAvailable) {
         setErrorMsg('Username is already taken. Please choose another.');
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
       // 2. Process signup
+      setLoadingStep('Creating account...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -226,10 +228,11 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 
       if (error) {
         setErrorMsg(error.message);
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
+      setLoadingStep('Saving profile...');
       let storedRole = 'client';
       if (email === 'krewgrid.admin@gmail.com') {
         storedRole = 'admin';
@@ -249,6 +252,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         console.error("Failed to create profile:", profileError);
       }
 
+      setLoadingStep('Redirecting...');
       localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
       localStorage.setItem('krewgrid_role', storedRole);
       
@@ -256,7 +260,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'An unexpected error occurred during sign up.');
-      setLoading(false);
+      setLoadingStep('');
     }
   };
   return (
@@ -266,7 +270,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
       </div>
       {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
           {errorMsg}
         </div>
       )}
@@ -276,7 +280,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <div className="grid gap-2"><Label htmlFor="contact-client">Contact number</Label><Input id="contact-client" name="contact" type="tel" defaultValue="+91 " required /></div>
         <div className="grid gap-2"><Label htmlFor="whatsapp-client">WhatsApp number</Label><Input id="whatsapp-client" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
-        <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing Up...' : 'Sign up'}</Button>
+        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
       </div>
     </form>
   );
@@ -284,11 +288,11 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 
 function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
 
   const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault(); 
-    setLoading(true);
+    setLoadingStep('Starting...');
     setErrorMsg('');
     
     try {
@@ -301,14 +305,16 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       if (!supabase) throw new Error('Database connection error. Missing configuration.');
 
       // 1. Check if username is available
+      setLoadingStep('Checking username...');
       const { data: isAvailable, error: checkError } = await supabase.rpc('check_username_available', { check_username: username });
       if (!isAvailable) {
         setErrorMsg('Username is already taken. Please choose another.');
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
       // 2. Process signup
+      setLoadingStep('Creating account...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -322,10 +328,11 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 
       if (error) {
         setErrorMsg(error.message);
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
+      setLoadingStep('Saving profile...');
       let storedRole = 'worker';
       if (email === 'krewgrid.admin@gmail.com') {
         storedRole = 'admin';
@@ -358,6 +365,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         await supabase.rpc('reward_referrer', { ref_code: referralInput });
       }
 
+      setLoadingStep('Redirecting...');
       localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
       localStorage.setItem('krewgrid_role', storedRole);
       
@@ -365,7 +373,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || 'An unexpected error occurred during sign up.');
-      setLoading(false);
+      setLoadingStep('');
     }
   };
   return (
@@ -375,7 +383,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
       </div>
       {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
           {errorMsg}
         </div>
       )}
@@ -386,7 +394,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <div className="grid gap-2"><Label htmlFor="whatsapp-worker">WhatsApp number</Label><Input id="whatsapp-worker" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
         <div className="grid gap-2"><Label htmlFor="referral-worker">Referral Code (Optional)</Label><Input id="referral-worker" name="referral" type="text" placeholder="e.g. A9X3F1" /></div>
-        <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing Up...' : 'Sign up'}</Button>
+        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
       </div>
     </form>
   );
