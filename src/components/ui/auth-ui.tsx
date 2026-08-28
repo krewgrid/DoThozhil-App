@@ -119,42 +119,53 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setErrorMsg(error.message);
+    if (!supabase) {
+      setErrorMsg('Database connection error. Missing configuration.');
       setLoading(false);
       return;
     }
 
-    const userMeta = data.user?.user_metadata || {};
-    const storedName = userMeta.username || email.split('@')[0];
-    let storedRole = userMeta.role || 'client';
-    
-    // Always check the actual profile in the database since roles can change (e.g. bans)
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-    if (profile && profile.role) {
-      storedRole = profile.role;
-    }
-    
-    if (email === 'krewgrid.admin@gmail.com') {
-      storedRole = 'admin';
-    }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (storedRole === 'banned') {
-      await supabase.auth.signOut();
-      setErrorMsg('Your account has been banned. Please contact support.krewgrid@gmail.com');
+      if (error) {
+        setErrorMsg(error.message);
+        setLoading(false);
+        return;
+      }
+
+      const userMeta = data.user?.user_metadata || {};
+      const storedName = userMeta.username || email.split('@')[0];
+      let storedRole = userMeta.role || 'client';
+      
+      // Always check the actual profile in the database since roles can change (e.g. bans)
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+      if (profile && profile.role) {
+        storedRole = profile.role;
+      }
+      
+      if (email === 'krewgrid.admin@gmail.com') {
+        storedRole = 'admin';
+      }
+
+      if (storedRole === 'banned') {
+        await supabase.auth.signOut();
+        setErrorMsg('Your account has been banned. Please contact support.krewgrid@gmail.com');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('krewgrid_username', storedName);
+      localStorage.setItem('krewgrid_role', storedRole);
+      
+      onLogin(storedRole as "client" | "worker" | "admin");
+    } catch (err: any) {
+      setErrorMsg(err.message || 'An unexpected error occurred during sign in.');
       setLoading(false);
-      return;
     }
-
-    localStorage.setItem('krewgrid_username', storedName);
-    localStorage.setItem('krewgrid_role', storedRole);
-    
-    onLogin(storedRole as "client" | "worker" | "admin");
   };
   return (
     <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
@@ -426,12 +437,22 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
 
   useEffect(() => {
     async function fetchCount() {
-      // Use the secure RPC function to bypass RLS for anonymous users
-      const { data, error } = await supabase.rpc('get_worker_count');
-      if (!error && data !== null) {
-        setWorkerCount(data);
+      try {
+        if (!supabase) {
+          console.error("Supabase client is null. Missing environment variables.");
+          setIsCountLoaded(true);
+          return;
+        }
+        // Use the secure RPC function to bypass RLS for anonymous users
+        const { data, error } = await supabase.rpc('get_worker_count');
+        if (!error && data !== null) {
+          setWorkerCount(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch worker count:", err);
+      } finally {
+        setIsCountLoaded(true);
       }
-      setIsCountLoaded(true);
     }
     fetchCount();
   }, []);
