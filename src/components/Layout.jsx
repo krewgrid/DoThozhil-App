@@ -20,12 +20,22 @@ const Layout = ({ role }) => {
     if (!session) {
       navigate('/login');
     } else {
-      const userMeta = session.user?.user_metadata || {};
-      if (userMeta.username) {
-        localStorage.setItem('krewgrid_username', userMeta.username);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile || !profile.role) {
+        navigate('/complete-profile');
+        return;
       }
-      if (userMeta.role) {
-        localStorage.setItem('krewgrid_role', userMeta.role);
+
+      if (profile.username) {
+        localStorage.setItem('krewgrid_username', profile.username);
+      }
+      if (profile.role) {
+        localStorage.setItem('krewgrid_role', profile.role);
       }
       setLoading(false);
     }

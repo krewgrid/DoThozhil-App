@@ -107,7 +107,38 @@ PasswordInput.displayName = "PasswordInput";
 
 import { supabase } from '@/lib/supabase';
 
-function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
+function GoogleLoginButton() {
+  const [loading, setLoading] = useState(false);
+  const handleGoogle = async () => {
+    setLoading(true);
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/login'
+      }
+    });
+  };
+  return (
+    <div className="grid gap-2 w-full mt-2">
+      <div className="relative my-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/10" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+        </div>
+      </div>
+      <Button type="button" variant="outline" className="w-full font-semibold" onClick={handleGoogle} disabled={loading}>
+        <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+        </svg>
+        Google
+      </Button>
+    </div>
+  );
+}
+
+export function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [loadingStep, setLoadingStep] = useState('');
 
@@ -185,6 +216,7 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
         </div>
         <PasswordInput name="password" label="Password" required autoComplete="current-password" placeholder="Password"/>
         <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign in'}</Button>
+        <GoogleLoginButton />
       </div>
     </form>
   );
@@ -284,6 +316,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <div className="grid gap-2"><Label htmlFor="whatsapp-client">WhatsApp number</Label><Input id="whatsapp-client" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
         <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
+        <GoogleLoginButton />
       </div>
     </form>
   );
@@ -398,6 +431,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
         <div className="grid gap-2"><Label htmlFor="referral-worker">Referral Code (Optional)</Label><Input id="referral-worker" name="referral" type="text" placeholder="e.g. A9X3F1" /></div>
         <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
+        <GoogleLoginButton />
       </div>
     </form>
   );

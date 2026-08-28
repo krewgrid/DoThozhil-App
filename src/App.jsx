@@ -13,6 +13,7 @@ const PageLoader = () => (
 // Auth Pages (loaded eagerly since they're the entry point)
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
+import CompleteProfile from './pages/Auth/CompleteProfile';
 
 // Lazy-loaded Client Pages
 const ClientHome = React.lazy(() => import('./pages/Client/Home'));
@@ -47,6 +48,7 @@ function App() {
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
 
           {/* Client Routes */}
           <Route path="/client" element={<Layout role="client" />}>
