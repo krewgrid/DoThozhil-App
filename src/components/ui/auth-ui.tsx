@@ -127,12 +127,23 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
 
     try {
       setLoadingStep('Authenticating...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      
+      console.log("1. Environment URL:", import.meta.env.VITE_SUPABASE_URL ? "Exists" : "Missing");
+      console.log("2. Attempting to sign in email:", email);
+      
+      // Let's set a manual timeout so it doesn't hang forever
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase Auth Timeout (10 seconds)")), 10000));
+      
+      console.log("3. Calling supabase.auth.signInWithPassword...");
+      
+      // Race the auth call against a 10 second timeout
+      const authPromise = supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+
+      console.log("4. Auth Call Finished!", { data, error });
 
       if (error) {
+        console.error("Auth Error:", error);
         setErrorMsg(error.message);
         setLoadingStep('');
         return;
