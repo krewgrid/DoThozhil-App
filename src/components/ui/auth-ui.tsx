@@ -344,8 +344,8 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       // 3. Generate unique referral code for this new user
       const myReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      // 4. If they used a referral code, they get 5 slots. Otherwise 0.
-      const initialSlots = referralInput ? 5 : 0;
+      // 4. Workers get 5 slots by default. If they used a referral code, they get +5 (total 10).
+      const initialSlots = referralInput ? 10 : 5;
 
       const { error: profileError } = await supabase
         .from('profiles')
