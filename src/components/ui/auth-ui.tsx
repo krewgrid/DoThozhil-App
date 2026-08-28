@@ -109,11 +109,11 @@ import { supabase } from '@/lib/supabase';
 
 function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => { 
     event.preventDefault(); 
-    setLoading(true);
+    setLoadingStep('Starting...');
     setErrorMsg('');
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
@@ -121,11 +121,12 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
     
     if (!supabase) {
       setErrorMsg('Database connection error. Missing configuration.');
-      setLoading(false);
+      setLoadingStep('');
       return;
     }
 
     try {
+      setLoadingStep('Authenticating...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -133,10 +134,11 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
 
       if (error) {
         setErrorMsg(error.message);
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
+      setLoadingStep('Loading profile...');
       const userMeta = data.user?.user_metadata || {};
       const storedName = userMeta.username || email.split('@')[0];
       let storedRole = userMeta.role || 'client';
@@ -154,17 +156,18 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
       if (storedRole === 'banned') {
         await supabase.auth.signOut();
         setErrorMsg('Your account has been banned. Please contact support.krewgrid@gmail.com');
-        setLoading(false);
+        setLoadingStep('');
         return;
       }
 
+      setLoadingStep('Redirecting...');
       localStorage.setItem('krewgrid_username', storedName);
       localStorage.setItem('krewgrid_role', storedRole);
       
       onLogin(storedRole as "client" | "worker" | "admin");
     } catch (err: any) {
       setErrorMsg(err.message || 'An unexpected error occurred during sign in.');
-      setLoading(false);
+      setLoadingStep('');
     }
   };
   return (
@@ -174,14 +177,17 @@ function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin"
         <p className="text-balance text-sm text-muted-foreground">Enter your email below to sign in</p>
       </div>
       {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20">
+        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
           {errorMsg}
         </div>
       )}
       <div className="grid gap-4">
-        <div className="grid gap-2"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
-        <PasswordInput name="password" label="Password" required autoComplete="current-password" placeholder="Password" />
-        <Button type="submit" className="mt-2 w-full" disabled={loading}>{loading ? 'Signing In...' : 'Sign In'}</Button>
+        <div className="grid gap-2">
+          <Label htmlFor="email-signin">Email</Label>
+          <Input id="email-signin" name="email" type="email" placeholder="m@example.com" required autoComplete="email"/>
+        </div>
+        <PasswordInput name="password" label="Password" required autoComplete="current-password" placeholder="Password"/>
+        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign in'}</Button>
       </div>
     </form>
   );
