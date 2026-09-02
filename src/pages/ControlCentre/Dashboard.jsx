@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, AlertTriangle, Scale, Ban, ShieldCheck, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -486,14 +486,14 @@ function WorksTab() {
     setLoading(true);
     const { data } = await supabase
       .from('works')
-      .select(
+      .select(`
         *,
         client:profiles!client_id ( username, contact, whatsapp ),
         applications (
           id, status, slots_taken,
           worker:profiles!worker_id ( id, username, contact, whatsapp )
         )
-      );
+      `);
       
     if (data) {
       const today = new Date();
@@ -537,7 +537,7 @@ function WorksTab() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
             <div className="bg-white/5 p-4 rounded-xl text-sm">
               <div className="text-zinc-400 mb-1">Status</div>
-              <div className={ont-bold }>
+              <div className={`font-bold ${selectedWork.isActive ? 'text-emerald-400' : 'text-red-400'}`}>
                 {selectedWork.isActive ? 'Active' : 'Completed'}
               </div>
             </div>
@@ -575,7 +575,7 @@ function WorksTab() {
                         <div className="text-xs text-zinc-400">Status: {app.status} • Slots taken: {app.slots_taken}</div>
                       </div>
                     </div>
-                    <svg className={w-5 h-5 text-zinc-400 transition-transform } fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                      <svg className={`w-5 h-5 text-zinc-400 transition-transform ${selectedWorker?.id === app.worker_id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </div>
                   
                   {selectedWorker?.id === app.worker_id && (
@@ -605,7 +605,7 @@ function WorksTab() {
             >
               <div className="flex justify-between items-start">
                 <h3 className="font-bold text-white text-lg truncate pr-4">{work.work_name}</h3>
-                <span className={px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider }>
+                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${work.isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
                   {work.isActive ? 'Active' : 'Completed'}
                 </span>
               </div>
