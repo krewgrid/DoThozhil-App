@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Users, AlertTriangle, Scale, Ban, ShieldCheck, Eye, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
-// ─── Overview Tab ───────────────────────────────────────────────
+// â”€â”€â”€ Overview Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function OverviewTab() {
   const [stats, setStats] = useState({ openDisputes: 0, pendingNoShows: 0, bannedUsers: 0, activeUsers: 0 });
   const [loading, setLoading] = useState(true);
@@ -59,7 +59,7 @@ function OverviewTab() {
   );
 }
 
-// ─── Disputes Tab ───────────────────────────────────────────────
+// â”€â”€â”€ Disputes Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DisputesTab() {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +171,7 @@ function DisputesTab() {
                   <div className="text-xs text-zinc-500 mb-1">Worker</div>
                   <div className="font-medium text-white">{d.workerName}</div>
                   <div className="text-xs text-zinc-400 mt-1">
-                    Work: {d.workName} • Client: {d.clientName}
+                    Work: {d.workName} â€¢ Client: {d.clientName}
                   </div>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium border uppercase tracking-wider ${
@@ -237,7 +237,7 @@ function DisputesTab() {
   );
 }
 
-// ─── No-Shows Tab ───────────────────────────────────────────────
+// â”€â”€â”€ No-Shows Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function NoShowsTab() {
   const [noShows, setNoShows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -319,10 +319,10 @@ function NoShowsTab() {
               <div>
                 <div className="font-medium text-white">{ns.workerName}</div>
                 <div className="text-sm text-zinc-400 mt-1">
-                  Work: {ns.workName} • Date: {ns.workDate}
+                  Work: {ns.workName} â€¢ Date: {ns.workDate}
                 </div>
                 <div className="text-xs text-zinc-500 mt-1">
-                  Reported by: {ns.clientName} • {new Date(ns.created_at).toLocaleDateString()}
+                  Reported by: {ns.clientName} â€¢ {new Date(ns.created_at).toLocaleDateString()}
                 </div>
               </div>
               <button
@@ -339,7 +339,7 @@ function NoShowsTab() {
   );
 }
 
-// ─── Users Tab ──────────────────────────────────────────────────
+// â”€â”€â”€ Users Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function UsersTab() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -446,9 +446,9 @@ function UsersTab() {
                     {user.role}
                   </span>
                 </div>
-                <div className="md:col-span-2 text-zinc-400 truncate">{user.contact || '—'}</div>
+                <div className="md:col-span-2 text-zinc-400 truncate">{user.contact || 'â€”'}</div>
                 <div className="md:col-span-1 text-zinc-400">{user.slots ?? 0}</div>
-                <div className="md:col-span-2 text-zinc-400 text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</div>
+                <div className="md:col-span-2 text-zinc-400 text-xs">{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'â€”'}</div>
                 <div className="md:col-span-2 md:text-right">
                   {user.role === 'banned' ? (
                     <button onClick={() => handleUnban(user.id, user.username)} className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-md hover:bg-emerald-500/30 transition-colors">
@@ -471,7 +471,159 @@ function UsersTab() {
   );
 }
 
-// ─── Main Dashboard Component ───────────────────────────────────
+// â”€â”€â”€ Main Dashboard Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function WorksTab() {
+  const [works, setWorks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedWork, setSelectedWork] = useState(null);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+
+  useEffect(() => {
+    loadWorks();
+  }, []);
+
+  async function loadWorks() {
+    setLoading(true);
+    const { data } = await supabase
+      .from('works')
+      .select(
+        *,
+        client:profiles!client_id ( username, contact, whatsapp ),
+        applications (
+          id, status, slots_taken,
+          worker:profiles!worker_id ( id, username, contact, whatsapp )
+        )
+      );
+      
+    if (data) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      const enriched = data.map(w => {
+        const wDate = new Date(w.date_work);
+        const isActive = wDate >= today && w.status !== 'completed';
+        return { ...w, isActive };
+      });
+      
+      enriched.sort((a, b) => {
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        return new Date(a.date_work) - new Date(b.date_work);
+      });
+      
+      setWorks(enriched);
+    }
+    setLoading(false);
+  }
+
+  if (loading) return <div className="p-8 text-zinc-400">Loading works...</div>;
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-white">All Works</h2>
+        <span className="text-sm text-zinc-400">{works.length} total works</span>
+      </div>
+
+      {selectedWork ? (
+        <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 relative">
+          <button onClick={() => { setSelectedWork(null); setSelectedWorker(null); }} className="absolute top-6 right-6 text-zinc-400 hover:text-white">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+          
+          <h3 className="text-2xl font-bold text-white mb-1">{selectedWork.work_name}</h3>
+          <p className="text-zinc-400 text-sm mb-6">Posted by: {selectedWork.client?.username || 'Unknown'} (Ph: {selectedWork.client?.contact || 'N/A'})</p>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div className="bg-white/5 p-4 rounded-xl text-sm">
+              <div className="text-zinc-400 mb-1">Status</div>
+              <div className={ont-bold }>
+                {selectedWork.isActive ? 'Active' : 'Completed'}
+              </div>
+            </div>
+            <div className="bg-white/5 p-4 rounded-xl text-sm">
+              <div className="text-zinc-400 mb-1">Date</div>
+              <div className="font-medium text-white">{new Date(selectedWork.date_work).toLocaleDateString()}</div>
+            </div>
+            <div className="bg-white/5 p-4 rounded-xl text-sm">
+              <div className="text-zinc-400 mb-1">Location</div>
+              <div className="font-medium text-white truncate">{selectedWork.location}</div>
+            </div>
+            <div className="bg-white/5 p-4 rounded-xl text-sm">
+              <div className="text-zinc-400 mb-1">Payment</div>
+              <div className="font-bold text-white">₹{selectedWork.payment_amount}</div>
+            </div>
+          </div>
+
+          <h4 className="text-lg font-bold text-white mb-4">Joined Workers</h4>
+          <div className="flex flex-col gap-3">
+            {!selectedWork.applications || selectedWork.applications.length === 0 ? (
+              <div className="text-zinc-500 italic">No workers have joined yet.</div>
+            ) : (
+              selectedWork.applications.map(app => (
+                <div key={app.id} className="bg-white/5 border border-white/5 rounded-xl overflow-hidden transition-all">
+                  <div 
+                    className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5"
+                    onClick={() => setSelectedWorker(selectedWorker?.id === app.worker_id ? null : app.worker)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                        {(app.worker?.username || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{app.worker?.username || 'Unknown Worker'}</div>
+                        <div className="text-xs text-zinc-400">Status: {app.status} • Slots taken: {app.slots_taken}</div>
+                      </div>
+                    </div>
+                    <svg className={w-5 h-5 text-zinc-400 transition-transform } fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                  
+                  {selectedWorker?.id === app.worker_id && (
+                    <div className="p-4 bg-black/40 border-t border-white/5 grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-zinc-500 mb-1">Contact Number</div>
+                        <div className="text-sm text-white font-medium">{app.worker?.contact || 'Not provided'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-zinc-500 mb-1">WhatsApp</div>
+                        <div className="text-sm text-white font-medium">{app.worker?.whatsapp || 'Not provided'}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {works.map(work => (
+            <div 
+              key={work.id} 
+              onClick={() => setSelectedWork(work)}
+              className="bg-white/5 border border-white/10 rounded-xl p-5 hover:bg-white/10 transition-colors cursor-pointer flex flex-col gap-4"
+            >
+              <div className="flex justify-between items-start">
+                <h3 className="font-bold text-white text-lg truncate pr-4">{work.work_name}</h3>
+                <span className={px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider }>
+                  {work.isActive ? 'Active' : 'Completed'}
+                </span>
+              </div>
+              
+              <div className="text-sm text-zinc-400 space-y-1">
+                <div className="flex items-center gap-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> {new Date(work.date_work).toLocaleDateString()}</div>
+                <div className="flex items-center gap-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> <span className="truncate">{work.location}</span></div>
+                <div className="flex items-center gap-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> {work.applications?.length || 0} applications</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -488,7 +640,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            {activeTab === 'overview' ? 'Overview' : activeTab === 'disputes' ? 'Disputes' : activeTab === 'no-shows' ? 'No-Show Reports' : 'User Management'}
+            {activeTab === 'overview' ? 'Overview' : activeTab === 'works' ? 'All Works' : activeTab === 'disputes' ? 'Disputes' : activeTab === 'no-shows' ? 'No-Show Reports' : 'User Management'}
           </h1>
           <p className="text-zinc-400 mt-1">Platform moderation and system health.</p>
         </div>
@@ -501,6 +653,7 @@ export default function Dashboard() {
       <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/10 lg:hidden">
         {[
           { id: 'overview', label: 'Overview' },
+          { id: 'works', label: 'Works' },
           { id: 'disputes', label: 'Disputes' },
           { id: 'no-shows', label: 'No-Shows' },
           { id: 'users', label: 'Users' },
@@ -517,10 +670,11 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {activeTab === 'overview' && <OverviewTab />}
+      {activeTab === 'overview' && <OverviewTab />} {activeTab === 'works' && <WorksTab />}
       {activeTab === 'disputes' && <DisputesTab />}
       {activeTab === 'no-shows' && <NoShowsTab />}
       {activeTab === 'users' && <UsersTab />}
     </div>
   );
 }
+

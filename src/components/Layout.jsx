@@ -58,6 +58,7 @@ const Layout = ({ role }) => {
   if (role === 'admin') {
     const adminNavItems = [
       { id: 'overview', label: 'Overview', icon: '📊' },
+      { id: 'works', label: 'Works', icon: '📋' },
       { id: 'disputes', label: 'Disputes', icon: '⚖️' },
       { id: 'no-shows', label: 'No-Shows', icon: '⚠️' },
       { id: 'users', label: 'Users', icon: '👥' },
