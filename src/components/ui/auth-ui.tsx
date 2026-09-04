@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { useState, useId, useEffect } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import * as LabelPrimitive from "@radix-ui/react-label";
@@ -283,7 +283,7 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
+          .upsert({
           id: data.user?.id,
           username: username,
           role: storedRole,
@@ -390,7 +390,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
+          .upsert({
           id: data.user?.id,
           username: username,
           role: storedRole,
@@ -562,3 +562,4 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
     </div>
   )
 }
+
