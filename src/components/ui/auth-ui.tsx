@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { useState, useId, useEffect } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import * as LabelPrimitive from "@radix-ui/react-label";
@@ -331,117 +331,14 @@ function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
 }
 
 function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
-  const [errorMsg, setErrorMsg] = useState('');
-  const [loadingStep, setLoadingStep] = useState('');
-
-  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
-    event.preventDefault(); 
-    setLoadingStep('Starting...');
-    setErrorMsg('');
-    
-    try {
-      const formData = new FormData(event.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      const username = formData.get("username") as string;
-      const referralInput = formData.get("referral") as string;
-      
-      if (!supabase) throw new Error('Database connection error. Missing configuration.');
-
-      // 1. Check if username is available
-      setLoadingStep('Checking username...');
-      const { data: isAvailable, error: checkError } = await supabase.rpc('check_username_available', { check_username: username });
-      if (!isAvailable) {
-        setErrorMsg('Username is already taken. Please choose another.');
-        setLoadingStep('');
-        return;
-      }
-
-      // 2. Process signup
-      setLoadingStep('Creating account...');
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username,
-            role: 'worker'
-          }
-        }
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setLoadingStep('');
-        return;
-      }
-
-      setLoadingStep('Saving profile...');
-      let storedRole = 'worker';
-      if (email === 'krewgrid.admin@gmail.com') {
-        storedRole = 'admin';
-      }
-
-      // 3. Generate unique referral code for this new user
-      const myReferralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      
-      // 4. Workers get 5 slots by default. If they used a referral code, they get +5 (total 10).
-      const initialSlots = referralInput ? 10 : 5;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-          .upsert({
-          id: data.user?.id,
-          username: username,
-          role: storedRole,
-          contact: formData.get("contact") as string,
-          whatsapp: formData.get("whatsapp") as string,
-          referral_code: myReferralCode,
-          slots: initialSlots
-        });
-
-      if (profileError) {
-        console.error("Failed to create profile:", profileError);
-      }
-
-      // 5. Reward the referrer if a code was provided
-      if (referralInput) {
-        await supabase.rpc('reward_referrer', { ref_code: referralInput });
-      }
-
-      setLoadingStep('Redirecting...');
-      localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
-      localStorage.setItem('krewgrid_role', storedRole);
-      
-      onLogin(storedRole as "client" | "worker" | "admin");
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'An unexpected error occurred during sign up.');
-      setLoadingStep('');
-    }
-  };
   return (
-    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
       <div className="flex flex-col items-start gap-2 text-left">
         <h1 className="text-3xl font-bold">Create Worker account</h1>
-        <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
+        <p className="text-balance text-sm text-muted-foreground">Sign in with Google to get started</p>
       </div>
-      {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
-          {errorMsg}
-        </div>
-      )}
-      <div className="grid gap-4">
-        <div className="grid gap-2"><Label htmlFor="email-worker">Email address</Label><Input id="email-worker" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
-        <div className="grid gap-2"><Label htmlFor="username-worker">Username</Label><Input id="username-worker" name="username" type="text" placeholder="Choose a unique username" required /></div>
-        <div className="grid gap-2"><Label htmlFor="contact-worker">Contact number</Label><Input id="contact-worker" name="contact" type="tel" defaultValue="+91 " required /></div>
-        <div className="grid gap-2"><Label htmlFor="whatsapp-worker">WhatsApp number</Label><Input id="whatsapp-worker" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
-        <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
-        <div className="grid gap-2"><Label htmlFor="referral-worker">Referral Code (Optional)</Label><Input id="referral-worker" name="referral" type="text" placeholder="e.g. A9X3F1" /></div>
-        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
-        <GoogleLoginButton />
-      </div>
-    </form>
+      <GoogleLoginButton />
+    </div>
   );
 }
 
