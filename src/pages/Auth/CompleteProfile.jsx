@@ -126,7 +126,7 @@ const CompleteProfile = () => {
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" name="username" type="text" defaultValue={role === 'client' ? "c_" : "w_"} required />
+            <Input id="username" name="username" type="text" placeholder="Choose a unique username" required />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="contact">Contact number</Label>

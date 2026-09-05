@@ -62,6 +62,7 @@ const Layout = ({ role }) => {
       { id: 'disputes', label: 'Disputes', icon: '⚖️' },
       { id: 'no-shows', label: 'No-Shows', icon: '⚠️' },
       { id: 'users', label: 'Users', icon: '👥' },
+      { id: 'create-client', label: 'Create Client', icon: '➕' },
     ];
 
     return (

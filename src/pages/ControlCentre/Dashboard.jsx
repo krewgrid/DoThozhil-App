@@ -624,6 +624,124 @@ function WorksTab() {
 }
 
 
+function CreateClientTab() {
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleCreateClient = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setSuccessMsg('');
+    setErrorMsg('');
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const username = formData.get('username');
+    const contact = formData.get('contact');
+    const whatsapp = formData.get('whatsapp');
+
+    try {
+      // 1. Create the auth user via Supabase Admin (using service role would be ideal, 
+      //    but we use signUp + immediately create profile as admin workaround)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username,
+            role: 'client'
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      // 2. Create the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: signUpData.user?.id,
+          username: username,
+          role: 'client',
+          contact: contact,
+          whatsapp: whatsapp,
+          slots: 0
+        });
+
+      if (profileError) throw profileError;
+
+      setSuccessMsg(`Client account created successfully! Email: ${email} | Username: ${username}`);
+      e.target.reset();
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to create client account.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-white">Create Client Account</h2>
+        <p className="text-sm text-zinc-400 mt-1">Create a new client account. Share the email and password with them so they can log in.</p>
+      </div>
+
+      <div className="max-w-lg">
+        <form onSubmit={handleCreateClient} className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-5">
+          {successMsg && (
+            <div className="bg-emerald-500/15 text-emerald-400 text-sm p-4 rounded-xl border border-emerald-500/20 break-words">
+              ✅ {successMsg}
+            </div>
+          )}
+          {errorMsg && (
+            <div className="bg-red-500/15 text-red-400 text-sm p-4 rounded-xl border border-red-500/20 break-words">
+              ❌ {errorMsg}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-zinc-300">Email Address</label>
+            <input name="email" type="email" required placeholder="client@gmail.com"
+              className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 transition-colors" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-zinc-300">Username</label>
+            <input name="username" type="text" required placeholder="Choose a username"
+              className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 transition-colors" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-zinc-300">Password</label>
+            <input name="password" type="text" required placeholder="Create a password for them" minLength={6}
+              className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 transition-colors" />
+            <p className="text-xs text-zinc-500">This will be their login password. Share it with the client securely.</p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-zinc-300">Contact Number</label>
+            <input name="contact" type="tel" required defaultValue="+91 " placeholder="+91 XXXXXXXXXX"
+              className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 transition-colors" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-zinc-300">WhatsApp Number</label>
+            <input name="whatsapp" type="tel" required defaultValue="+91 " placeholder="+91 XXXXXXXXXX"
+              className="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-white/30 transition-colors" />
+          </div>
+
+          <button type="submit" disabled={loading}
+            className="mt-2 px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50">
+            {loading ? 'Creating...' : 'Create Client Account'}
+          </button>
+        </form>
+      </div>
+    </>
+  );
+}
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -635,12 +753,24 @@ export default function Dashboard() {
     return () => window.removeEventListener('admin-tab-change', handler);
   }, []);
 
+  const getTitle = () => {
+    switch(activeTab) {
+      case 'overview': return 'Overview';
+      case 'works': return 'All Works';
+      case 'disputes': return 'Disputes';
+      case 'no-shows': return 'No-Show Reports';
+      case 'users': return 'User Management';
+      case 'create-client': return 'Create Client';
+      default: return 'Overview';
+    }
+  };
+
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto flex flex-col gap-8 h-full overflow-y-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            {activeTab === 'overview' ? 'Overview' : activeTab === 'works' ? 'All Works' : activeTab === 'disputes' ? 'Disputes' : activeTab === 'no-shows' ? 'No-Show Reports' : 'User Management'}
+            {getTitle()}
           </h1>
           <p className="text-zinc-400 mt-1">Platform moderation and system health.</p>
         </div>
@@ -650,18 +780,19 @@ export default function Dashboard() {
       </div>
 
       {/* Mobile Tab Bar */}
-      <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/10 lg:hidden">
+      <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/10 lg:hidden overflow-x-auto">
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'works', label: 'Works' },
           { id: 'disputes', label: 'Disputes' },
           { id: 'no-shows', label: 'No-Shows' },
           { id: 'users', label: 'Users' },
+          { id: 'create-client', label: '+ Client' },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+            className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
               activeTab === tab.id ? 'bg-white text-black' : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -670,10 +801,12 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {activeTab === 'overview' && <OverviewTab />} {activeTab === 'works' && <WorksTab />}
+      {activeTab === 'overview' && <OverviewTab />}
+      {activeTab === 'works' && <WorksTab />}
       {activeTab === 'disputes' && <DisputesTab />}
       {activeTab === 'no-shows' && <NoShowsTab />}
       {activeTab === 'users' && <UsersTab />}
+      {activeTab === 'create-client' && <CreateClientTab />}
     </div>
   );
 }

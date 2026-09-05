@@ -24,7 +24,7 @@ const Signup = () => {
         return;
       }
       setUsernameStatus('checking');
-      const finalUsername = (type === 'client' ? 'c_' : 'w_') + rawUsername.trim().toLowerCase();
+      const finalUsername = rawUsername.trim().toLowerCase();
       
       const { data, error } = await supabase.rpc('check_username_available', { p_username: finalUsername });
       
@@ -80,7 +80,7 @@ const Signup = () => {
       return;
     }
 
-    const finalUsername = (type === 'client' ? 'c_' : 'w_') + rawUsername.trim().toLowerCase();
+    const finalUsername = rawUsername.trim().toLowerCase();
     const myRefCode = type.toUpperCase().charAt(0) + '_' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const { data, error } = await supabase.auth.signUp({
@@ -133,20 +133,14 @@ const Signup = () => {
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label className="label">Username</label>
-            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '0.5rem', overflow: 'hidden', backgroundColor: 'var(--card-bg)' }}>
-              <span style={{ padding: '0.75rem', backgroundColor: '#f3f4f6', color: '#6b7280', borderRight: '1px solid var(--border-color)', fontWeight: '600' }}>
-                {type === 'client' ? 'c_' : 'w_'}
-              </span>
-              <input 
-                type="text" 
-                value={rawUsername} 
-                onChange={e => setRawUsername(e.target.value)} 
-                className="input-field" 
-                style={{ border: 'none', borderRadius: 0 }} 
-                placeholder="Choose a unique username" 
-                required 
-              />
-            </div>
+            <input 
+              type="text" 
+              value={rawUsername} 
+              onChange={e => setRawUsername(e.target.value)} 
+              className="input-field" 
+              placeholder="Choose a unique username" 
+              required 
+            />
             {usernameStatus === 'checking' && <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Checking availability...</p>}
             {usernameStatus === 'available' && <p style={{ fontSize: '0.8rem', color: 'var(--success)', marginTop: '0.25rem' }}>✓ Username is available</p>}
             {usernameStatus === 'taken' && <p style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: '0.25rem' }}>✗ Username is taken</p>}

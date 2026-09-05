@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { useState, useId, useEffect } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import * as LabelPrimitive from "@radix-ui/react-label";
@@ -433,7 +433,7 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
       )}
       <div className="grid gap-4">
         <div className="grid gap-2"><Label htmlFor="email-worker">Email address</Label><Input id="email-worker" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
-        <div className="grid gap-2"><Label htmlFor="username-worker">Username</Label><Input id="username-worker" name="username" type="text" defaultValue="w_" required /></div>
+        <div className="grid gap-2"><Label htmlFor="username-worker">Username</Label><Input id="username-worker" name="username" type="text" placeholder="Choose a unique username" required /></div>
         <div className="grid gap-2"><Label htmlFor="contact-worker">Contact number</Label><Input id="contact-worker" name="contact" type="tel" defaultValue="+91 " required /></div>
         <div className="grid gap-2"><Label htmlFor="whatsapp-worker">WhatsApp number</Label><Input id="whatsapp-worker" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
         <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
@@ -445,46 +445,19 @@ function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "
   );
 }
 
-function RoleSelection({ onSelectRole }: { onSelectRole: (role: "client" | "worker") => void }) {
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-start gap-2 text-left">
-        <h1 className="text-3xl font-bold">Join as a client or worker</h1>
-        <p className="text-balance text-sm text-muted-foreground">Select how you want to use the platform</p>
-      </div>
-      <div className="grid gap-4">
-        <Button variant="outline" className="h-auto py-4 justify-start px-6" onClick={() => onSelectRole("client")}>
-          <div className="flex flex-col items-start text-left">
-            <span className="font-semibold text-lg">I am a Client</span>
-            <span className="text-sm font-normal text-muted-foreground mt-1">I want to hire workers for my event</span>
-          </div>
-        </Button>
-        <Button variant="outline" className="h-auto py-4 justify-start px-6" onClick={() => onSelectRole("worker")}>
-          <div className="flex flex-col items-start text-left">
-            <span className="font-semibold text-lg">I am a Worker</span>
-            <span className="text-sm font-normal text-muted-foreground mt-1">I want to find jobs for events</span>
-          </div>
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-export type AuthMode = "signIn" | "roleSelection" | "signUpClient" | "signUpWorker";
+export type AuthMode = "signIn" | "signUpWorker";
 
 function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode: (mode: AuthMode) => void; onLogin?: (role: "client" | "worker" | "admin") => void; }) {
     return (
         <div className="mx-auto grid w-full max-w-[350px] gap-2">
             {mode === "signIn" && <SignInForm onLogin={onLogin || (() => {})} />}
-            {mode === "roleSelection" && <RoleSelection onSelectRole={(role) => setMode(role === "client" ? "signUpClient" : "signUpWorker")} />}
-            {mode === "signUpClient" && <ClientSignUpForm onLogin={onLogin || (() => {})} />}
             {mode === "signUpWorker" && <WorkerSignUpForm onLogin={onLogin || (() => {})} />}
 
             <div className="text-center text-sm mt-4">
                 {mode === "signIn" ? (
                     <>
                         Don't have an account?{" "}
-                        <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("roleSelection")}>
+                        <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("signUpWorker")}>
                             Sign up
                         </Button>
                     </>
@@ -514,7 +487,6 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
           setIsCountLoaded(true);
           return;
         }
-        // Use the secure RPC function to bypass RLS for anonymous users
         const { data, error } = await supabase.rpc('get_worker_count');
         if (!error && data !== null) {
           setWorkerCount(data);
@@ -562,4 +534,3 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
     </div>
   )
 }
-
