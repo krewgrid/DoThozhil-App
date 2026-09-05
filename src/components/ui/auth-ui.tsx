@@ -408,7 +408,7 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
       
       {/* krewgrid logo text */}
       <div className="absolute top-6 left-8 z-20">
-        <img src="/logo-k.png" alt="krewgrid" className="h-10 w-10 rounded-lg" />
+        <span className="text-2xl font-bold tracking-tight">krewgrid</span>
       </div>
 
       <div className="flex flex-col min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
