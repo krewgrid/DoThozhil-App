@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { useState, useId, useEffect } from "react";
 import { Slot } from "@radix-ui/react-slot";
 import * as LabelPrimitive from "@radix-ui/react-label";
@@ -408,7 +408,7 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
       
       {/* krewgrid logo text */}
       <div className="absolute top-6 left-8 z-20">
-        <span className="text-2xl font-bold tracking-tight">krewgrid</span>
+        <img src="/logo-k.png" alt="krewgrid" className="h-10 w-10 rounded-lg" />
       </div>
 
       <div className="flex flex-col min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
