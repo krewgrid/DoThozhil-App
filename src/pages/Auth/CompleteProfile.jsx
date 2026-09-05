@@ -7,7 +7,7 @@ import { Label } from '../../components/ui/label';
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-  const [role, setRole] = useState(null);
+  const [role] = useState('worker');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [user, setUser] = useState(null);
@@ -84,32 +84,6 @@ const CompleteProfile = () => {
     }
   };
 
-  if (!role) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground font-sans p-6">
-        <div className="mx-auto grid w-full max-w-[400px] gap-8">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-3xl font-bold">Almost there!</h1>
-            <p className="text-balance text-sm text-muted-foreground">Select how you want to use krewgrid</p>
-          </div>
-          <div className="grid gap-4">
-            <Button variant="outline" className="h-auto py-4 justify-start px-6" onClick={() => setRole("client")}>
-              <div className="flex flex-col items-start text-left">
-                <span className="font-semibold text-lg">I am a Client</span>
-                <span className="text-sm font-normal text-muted-foreground mt-1">I want to hire workers for my event</span>
-              </div>
-            </Button>
-            <Button variant="outline" className="h-auto py-4 justify-start px-6" onClick={() => setRole("worker")}>
-              <div className="flex flex-col items-start text-left">
-                <span className="font-semibold text-lg">I am a Worker</span>
-                <span className="text-sm font-normal text-muted-foreground mt-1">I want to find jobs for events</span>
-              </div>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background text-foreground font-sans p-6">
