@@ -52,10 +52,7 @@ export function BuySlotsView() {
       const slotsToAdd = details[plan].slots
       const newTotal = currentSlots + slotsToAdd
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ slots: newTotal })
-        .eq('id', user.id)
+      const { error } = await supabase.rpc('buy_slots', { p_amount: slotsToAdd })
 
       if (error) throw error
 

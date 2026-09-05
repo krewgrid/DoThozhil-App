@@ -205,34 +205,22 @@ export function GetWorkView() {
         photoUrl = publicUrl
       }
 
-      const { error } = await supabase
-        .from('applications')
-        .insert({
-          work_id: selectedWork.id,
-          worker_id: user.id,
-          slots_taken: slotsTaken,
-          co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null,
-          photo_url: photoUrl,
-          status: selectedWork.requireApproval ? 'pending' : 'approved'
-        })
+      const { error } = await supabase.rpc('apply_for_work', {
+        p_work_id: selectedWork.id,
+        p_slots_taken: slotsTaken,
+        p_co_worker_names: slotsTaken > 1 ? coWorkerNames.join(", ") : null,
+        p_photo_url: photoUrl,
+        p_require_approval: !!selectedWork.requireApproval
+      })
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505' || error.message?.includes('unique constraint')) {
           alert("You have already applied for this work.")
-        } else if (error.code === '42703') { // Column does not exist
-          alert("Database needs update. Please run the provided SQL script to add slots_taken and co_worker_names columns.")
         } else {
           throw error
         }
       } else {
-
-        // Deduct slots from worker's profile
         const newSlots = workerSlots - slotsTaken
-        await supabase
-          .from('profiles')
-          .update({ slots: newSlots })
-          .eq('id', user.id)
-        
         setWorkerSlots(newSlots)
         setAppliedWorkIds(prev => new Set(prev).add(selectedWork.id))
         closeModal()
