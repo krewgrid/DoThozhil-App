@@ -2,6 +2,16 @@ import { useState, useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import GlassRadioGroup from "./glass-radio-group"
 
+function loadScript(src: string) {
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.src = src
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
 export function BuySlotsView() {
   const [plan, setPlan] = useState("silver")
   const [currentSlots, setCurrentSlots] = useState(0)
@@ -50,17 +60,56 @@ export function BuySlotsView() {
       if (!user) return alert("Please log in.")
 
       const slotsToAdd = details[plan].slots
+      const priceInRupees = details[plan].price
       const newTotal = currentSlots + slotsToAdd
 
-      const { error } = await supabase.rpc('buy_slots', { p_amount: slotsToAdd })
+      // Load Razorpay Script
+      const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
+      if (!res) {
+        alert('Razorpay SDK failed to load. Are you online?')
+        setPurchasing(false)
+        return
+      }
 
-      if (error) throw error
+      const options = {
+        key: 'rzp_test_TZx1iMh7ntKxMe', // User's Test Key
+        amount: priceInRupees * 100, // Amount is in currency subunits (paise)
+        currency: 'INR',
+        name: 'Krewgrid',
+        description: `Purchase ${slotsToAdd} Slots`,
+        image: '/k-icon.png',
+        handler: async function (response: any) {
+          try {
+            // Payment succeeded! Now we securely add the slots
+            const { error } = await supabase.rpc('buy_slots', { p_amount: slotsToAdd })
+            if (error) throw error
 
-      setCurrentSlots(newTotal)
-      alert(`Successfully added ${slotsToAdd} slots! You now have ${newTotal} slots.`)
+            setCurrentSlots(newTotal)
+            alert(`Payment Successful! Added ${slotsToAdd} slots. Payment ID: ${response.razorpay_payment_id}`)
+          } catch (err: any) {
+            alert('Error adding slots after payment: ' + err.message)
+          } finally {
+            setPurchasing(false)
+          }
+        },
+        prefill: {
+          email: user.email,
+        },
+        theme: {
+          color: '#10b981' // Emerald 500 to match Krewgrid theme
+        },
+        modal: {
+          ondismiss: function() {
+            setPurchasing(false)
+          }
+        }
+      }
+
+      const paymentObject = new (window as any).Razorpay(options)
+      paymentObject.open()
+
     } catch (err: any) {
       alert("Purchase failed: " + err.message)
-    } finally {
       setPurchasing(false)
     }
   }
