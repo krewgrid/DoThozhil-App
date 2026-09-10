@@ -65,7 +65,7 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
         {/* Background gradient */}
         <div 
           className="absolute inset-0 h-full w-full" 
-          style={{ background: "linear-gradient(to bottom right, #e1ddd8, #191919)" }}
+          style={{ background: "linear-gradient(to bottom right, #1DBC60, #191919)" }}
         />
 
         {/* Noise overlay */}
