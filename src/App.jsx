@@ -1,5 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React, { Suspense } from 'react';
+import ComingSoon from './pages/ComingSoon';
+
+// ============================================================
+// COMING SOON MODE: Set to false to reveal the full website
+const COMING_SOON = true;
+// ============================================================
+
 import Layout from './components/Layout';
 
 // Loading spinner for lazy-loaded routes
@@ -38,6 +45,16 @@ const Profile = React.lazy(() => import('./pages/Shared/Profile'));
 const ControlCentreDashboard = React.lazy(() => import('./pages/ControlCentre/Dashboard'));
 
 function App() {
+  if (COMING_SOON) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<ComingSoon />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
@@ -84,3 +101,4 @@ function App() {
 }
 
 export default App;
+
