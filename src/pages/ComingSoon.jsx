@@ -37,12 +37,11 @@ export default function ComingSoon() {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-2xl">
         {/* Logo */}
-        <h1
-          className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight mb-6"
-          style={{ color: '#E1E0CC' }}
-        >
-          krewgrid
-        </h1>
+        <img
+          src="/krewgrid-logo.png"
+          alt="krewgrid"
+          className="w-48 sm:w-64 md:w-80 mb-8"
+        />
 
         {/* Tagline */}
         <p className="text-lg sm:text-xl md:text-2xl text-white/80 font-medium mb-4">
