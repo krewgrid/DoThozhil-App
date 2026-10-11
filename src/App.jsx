@@ -4,7 +4,7 @@ import ComingSoon from './pages/ComingSoon';
 
 // ============================================================
 // COMING SOON MODE: Set to false to reveal the full website
-const COMING_SOON = true;
+const COMING_SOON = false;
 // ============================================================
 
 import Layout from './components/Layout';
