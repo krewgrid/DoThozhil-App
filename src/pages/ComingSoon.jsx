@@ -85,6 +85,7 @@ export default function Waitlist() {
         });
 
       if (error) {
+        console.error("Waitlist submission error:", error);
         if (error.code === '23505') {
           // Duplicate email — still show success
           setDoneEmail(email.trim().toLowerCase());
@@ -97,7 +98,8 @@ export default function Waitlist() {
         setDone(true);
         setWaitlistCount(prev => prev + 1);
       }
-    } catch {
+    } catch (err) {
+      console.error("Waitlist exception:", err);
       setErrors({ form: 'generic' });
     } finally {
       setSending(false);
@@ -132,7 +134,15 @@ export default function Waitlist() {
           gap: 12,
         }}>
           <a href="./" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img src="/krewgrid-logo.png" style={{ height: 48 }} alt="Krewgrid" />
+            <picture>
+              <source srcSet="/krewgrid-logo-white.png" media="(prefers-color-scheme: dark)" />
+              <img
+                src="/krewgrid-logo.png"
+                alt="Krewgrid"
+                className="krewgrid-nav-logo"
+                style={{ height: 44, width: 'auto', display: 'block', objectFit: 'contain' }}
+              />
+            </picture>
           </a>
           <div style={{
             display: 'inline-flex',
@@ -497,6 +507,11 @@ export default function Waitlist() {
         }
         .waitlist-card button[type="submit"]:hover {
           background: #2e31b0 !important;
+        }
+        @media (prefers-color-scheme: dark) {
+          .krewgrid-nav-logo {
+            filter: brightness(0) invert(1);
+          }
         }
       `}</style>
     </>
