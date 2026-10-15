@@ -107,31 +107,37 @@ PasswordInput.displayName = "PasswordInput";
 
 import { supabase } from '@/lib/supabase';
 
-function GoogleLoginButton() {
+// Sign-in: Google for everyone (workers and clients), plus email + password.
+// After signing in, new people choose worker or client on /complete-profile.
+
+function GoogleLoginButton({ label = "Continue with Google", divider = true }: { label?: string; divider?: boolean }) {
   const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
   const handleGoogle = async () => {
     setLoading(true);
-    await supabase.auth.signInWithOAuth({
+    setErr('');
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/login'
-      }
+      options: { redirectTo: window.location.origin + '/login' },
     });
+    if (error) { setErr(error.message); setLoading(false); }
   };
   return (
     <div className="grid gap-2 w-full mt-2">
-      <div className="relative my-2">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/10" />
+      {divider && (
+        <div className="relative my-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-white/10" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-      <Button 
-        type="button" 
-        className="w-full font-semibold bg-white text-zinc-900 hover:bg-gray-100 border border-gray-300 transition-colors" 
-        onClick={handleGoogle} 
+      )}
+      <Button
+        type="button"
+        className="w-full font-semibold bg-white text-zinc-900 hover:bg-gray-100 border border-gray-300 transition-colors"
+        onClick={handleGoogle}
         disabled={loading}
       >
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -140,262 +146,105 @@ function GoogleLoginButton() {
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
         </svg>
-        Continue with Google
+        {loading ? "Opening Google…" : label}
       </Button>
+      {err && <p className="text-sm text-red-400">{err}</p>}
     </div>
   );
 }
 
-export function SignInForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
+function EmailForm({ mode }: { mode: "signIn" | "signUp" }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [loadingStep, setLoadingStep] = useState('');
+  const [info, setInfo] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => { 
-    event.preventDefault(); 
-    setLoadingStep('Starting...');
-    setErrorMsg('');
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    
-    if (!supabase) {
-      setErrorMsg('Database connection error. Missing configuration.');
-      setLoadingStep('');
-      return;
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMsg(''); setInfo('');
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    if (!supabase) { setErrorMsg('Database connection error. Missing configuration.'); return; }
+    setLoading(true);
+    if (mode === "signIn") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) setErrorMsg(error.message);
+      // On success the session listener sends the person to their dashboard.
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + '/login' } });
+      if (error) setErrorMsg(error.message);
+      else if (!data.session) setInfo('Check your email to confirm your account, then sign in.');
     }
-
-    try {
-      setLoadingStep('Authenticating...');
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setLoadingStep('');
-        return;
-      }
-      
-      setLoadingStep('Loading profile...');
-      const userMeta = data.user?.user_metadata || {};
-      const storedName = userMeta.username || email.split('@')[0];
-      let storedRole = userMeta.role || 'client';
-      
-      // Always check the actual profile in the database since roles can change (e.g. bans)
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
-      if (profile && profile.role) {
-        storedRole = profile.role;
-      }
-      
-      if (email === 'krewgrid.admin@gmail.com') {
-        storedRole = 'admin';
-      }
-
-      if (storedRole === 'banned') {
-        await supabase.auth.signOut();
-        setErrorMsg('Your account has been banned. Please contact support.krewgrid@gmail.com');
-        setLoadingStep('');
-        return;
-      }
-
-      setLoadingStep('Redirecting...');
-      localStorage.setItem('krewgrid_username', storedName);
-      localStorage.setItem('krewgrid_role', storedRole);
-      
-      onLogin(storedRole as "client" | "worker" | "admin");
-    } catch (err: any) {
-      setErrorMsg(err.message || 'An unexpected error occurred during sign in.');
-      setLoadingStep('');
-    }
+    setLoading(false);
   };
+
   return (
-    <form onSubmit={handleSignIn} autoComplete="on" className="flex flex-col gap-8">
-      <div className="flex flex-col items-start gap-2 text-left">
-        <h1 className="text-3xl font-bold">Sign in to your account</h1>
-        <p className="text-balance text-sm text-muted-foreground">Enter your email below to sign in</p>
-      </div>
-      {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
-          {errorMsg}
-        </div>
-      )}
+    <form onSubmit={handleSubmit} autoComplete="on" className="flex flex-col gap-6">
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="email-signin">Email</Label>
-          <Input id="email-signin" name="email" type="email" placeholder="m@example.com" required autoComplete="email"/>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" placeholder="you@example.com" required autoComplete="email" />
         </div>
-        <PasswordInput name="password" label="Password" required autoComplete="current-password" placeholder="Password"/>
-        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign in'}</Button>
-        <GoogleLoginButton />
+        <PasswordInput name="password" label={mode === "signIn" ? "Password" : "Create password"} required minLength={6}
+          autoComplete={mode === "signIn" ? "current-password" : "new-password"} placeholder="Password" />
+        {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
+        {info && <p className="text-sm text-emerald-400">{info}</p>}
+        <Button type="submit" variant="outline" className="mt-2" disabled={loading}>
+          {loading ? 'Please wait…' : mode === "signIn" ? 'Sign In' : 'Create account'}
+        </Button>
       </div>
     </form>
   );
 }
 
-function ClientSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
-  const [errorMsg, setErrorMsg] = useState('');
-  const [loadingStep, setLoadingStep] = useState('');
+export type AuthMode = "signIn" | "signUp";
 
-  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => { 
-    event.preventDefault(); 
-    setLoadingStep('Starting...');
-    setErrorMsg('');
-    
-    try {
-      const formData = new FormData(event.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
-      const username = formData.get("username") as string;
-      
-      if (!supabase) throw new Error('Database connection error. Missing configuration.');
-
-      // 1. Check if username is available
-      setLoadingStep('Checking username...');
-      const { data: isAvailable, error: checkError } = await supabase.rpc('check_username_available', { check_username: username });
-      if (!isAvailable) {
-        setErrorMsg('Username is already taken. Please choose another.');
-        setLoadingStep('');
-        return;
-      }
-
-      // 2. Process signup
-      setLoadingStep('Creating account...');
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username,
-            role: 'client'
-          }
-        }
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-        setLoadingStep('');
-        return;
-      }
-
-      setLoadingStep('Saving profile...');
-      let storedRole = 'client';
-      if (email === 'krewgrid.admin@gmail.com') {
-        storedRole = 'admin';
-      }
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-          .upsert({
-          id: data.user?.id,
-          username: username,
-          role: storedRole,
-          contact: formData.get("contact") as string,
-          whatsapp: formData.get("whatsapp") as string
-        });
-        
-      if (profileError) {
-        console.error("Failed to create profile:", profileError);
-      }
-
-      setLoadingStep('Redirecting...');
-      localStorage.setItem('krewgrid_username', username || email.split('@')[0]);
-      localStorage.setItem('krewgrid_role', storedRole);
-      
-      onLogin(storedRole as "client" | "worker" | "admin");
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'An unexpected error occurred during sign up.');
-      setLoadingStep('');
-    }
-  };
+function AuthFormContainer({ mode, setMode }: { mode: AuthMode; setMode: (mode: AuthMode) => void }) {
   return (
-    <form onSubmit={handleSignUp} autoComplete="on" className="flex flex-col gap-8">
-      <div className="flex flex-col items-start gap-2 text-left">
-        <h1 className="text-3xl font-bold">Create Client account</h1>
-        <p className="text-balance text-sm text-muted-foreground">Enter your details below to sign up</p>
+    <div className="mx-auto grid w-full max-w-[350px] gap-2">
+      <div className="flex flex-col items-center gap-2 text-center mb-4">
+        <h1 className="text-2xl font-bold">{mode === "signIn" ? "Sign in to your account" : "Join krewgrid"}</h1>
+        <p className="text-balance text-sm text-muted-foreground">
+          {mode === "signIn"
+            ? "Event work in Kochi, paid in full."
+            : "Workers and clients both start here, then choose. New workers get 5 free slots."}
+        </p>
       </div>
-      {errorMsg && (
-        <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/20 break-words">
-          {errorMsg}
+      {mode === "signUp" && <GoogleLoginButton label="Sign up with Google" divider={false} />}
+      {mode === "signUp" && (
+        <div className="relative my-3">
+          <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
+          <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Or with email</span></div>
         </div>
       )}
-      <div className="grid gap-4">
-        <div className="grid gap-2"><Label htmlFor="email-client">Email address</Label><Input id="email-client" name="email" type="email" placeholder="m@example.com" required autoComplete="email" /></div>
-        <div className="grid gap-2"><Label htmlFor="username-client">Username</Label><Input id="username-client" name="username" type="text" defaultValue="c_" required /></div>
-        <div className="grid gap-2"><Label htmlFor="contact-client">Contact number</Label><Input id="contact-client" name="contact" type="tel" defaultValue="+91 " required /></div>
-        <div className="grid gap-2"><Label htmlFor="whatsapp-client">WhatsApp number</Label><Input id="whatsapp-client" name="whatsapp" type="tel" defaultValue="+91 " required /></div>
-        <PasswordInput name="password" label="Create password" required autoComplete="new-password" placeholder="Password"/>
-        <Button type="submit" className="mt-2 w-full" disabled={!!loadingStep}>{loadingStep || 'Sign up'}</Button>
-        <GoogleLoginButton />
+      <EmailForm mode={mode} />
+      {mode === "signIn" && <GoogleLoginButton />}
+      <div className="text-center text-sm mt-4">
+        {mode === "signIn" ? (
+          <>Don't have an account?{" "}
+            <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("signUp")}>Sign up</Button></>
+        ) : (
+          <>Already have an account?{" "}
+            <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("signIn")}>Sign in</Button></>
+        )}
       </div>
-    </form>
-  );
-}
-
-function WorkerSignUpForm({ onLogin }: { onLogin: (role: "client" | "worker" | "admin") => void }) {
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-start gap-2 text-left">
-        <h1 className="text-3xl font-bold">Create Worker account</h1>
-        <p className="text-balance text-sm text-muted-foreground">Sign in with Google to get started</p>
-      </div>
-      <GoogleLoginButton />
     </div>
   );
 }
 
-export type AuthMode = "signIn" | "signUpWorker";
+type Stats = { city?: string; workers?: number | null; today?: number | null; by_skill?: Record<string, number> | null };
 
-function AuthFormContainer({ mode, setMode, onLogin }: { mode: AuthMode; setMode: (mode: AuthMode) => void; onLogin?: (role: "client" | "worker" | "admin") => void; }) {
-    return (
-        <div className="mx-auto grid w-full max-w-[350px] gap-2">
-            {mode === "signIn" && <SignInForm onLogin={onLogin || (() => {})} />}
-            {mode === "signUpWorker" && <WorkerSignUpForm onLogin={onLogin || (() => {})} />}
-
-            <div className="text-center text-sm mt-4">
-                {mode === "signIn" ? (
-                    <>
-                        Don't have an account?{" "}
-                        <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("signUpWorker")}>
-                            Sign up
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        Already have an account?{" "}
-                        <Button variant="link" className="pl-1 text-foreground" onClick={() => setMode("signIn")}>
-                            Sign in
-                        </Button>
-                    </>
-                )}
-            </div>
-        </div>
-    )
-}
-
-export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "admin") => void }) {
-  const [mode, setMode] = useState<AuthMode>("signIn");
-  const [workerCount, setWorkerCount] = useState(0);
-  const [isCountLoaded, setIsCountLoaded] = useState(false);
+export function AuthUI({ initialMode = "signIn", error }: { initialMode?: AuthMode; error?: string | null }) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    async function fetchCount() {
-      try {
-        if (!supabase) {
-          console.error("Supabase client is null. Missing environment variables.");
-          setIsCountLoaded(true);
-          return;
-        }
-        const { data, error } = await supabase.rpc('get_worker_count');
-        if (!error && data !== null) {
-          setWorkerCount(data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch worker count:", err);
-      } finally {
-        setIsCountLoaded(true);
-      }
-    }
-    fetchCount();
+    if (!supabase) { setStats({}); return; }
+    supabase.rpc('public_stats').then(({ data }: { data: Stats | null }) => setStats(data ?? {}));
   }, []);
+
+  const city = stats?.city ?? "Kochi";
+  const skills = Object.entries(stats?.by_skill ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   return (
     <div className="w-full min-h-screen md:grid md:grid-cols-2 relative font-sans">
@@ -405,29 +254,52 @@ export function AuthUI({ onLogin }: { onLogin?: (role: "client" | "worker" | "ad
           display: none;
         }
       `}</style>
-      
+
       {/* krewgrid logo text */}
       <div className="absolute top-6 left-8 z-20">
         <span className="text-2xl font-bold tracking-tight">krewgrid</span>
       </div>
 
       <div className="flex flex-col min-h-screen items-center justify-center p-6 md:p-0 md:py-12 bg-background">
-        <AuthFormContainer mode={mode} setMode={setMode} onLogin={onLogin} />
+        {error && <p className="mb-4 max-w-[350px] text-sm text-red-400 text-center">{error}</p>}
+        <AuthFormContainer mode={mode} setMode={setMode} />
       </div>
 
       {/* Right Side Fill Green Gradient */}
-      <div className="hidden md:flex relative bg-gradient-to-br from-emerald-400 to-emerald-900 transition-all duration-500 ease-in-out items-center justify-center flex-col">
-        {isCountLoaded && (
-        <div className="flex flex-col items-center justify-center space-y-6">
+      <div className="hidden md:flex relative bg-gradient-to-br from-emerald-400 to-emerald-900 transition-all duration-500 ease-in-out items-center justify-center flex-col p-12">
+        {stats && (stats.workers != null ? (
+          <div className="flex flex-col items-center justify-center space-y-6 w-full max-w-sm">
             <div className="text-center space-y-2">
-                <p className="text-3xl font-bold text-white drop-shadow-sm">
-                    <Typewriter key={workerCount} text={`${workerCount} workers joined`} speed={50} />
-                </p>
-                <p className="text-lg text-white/80 font-medium">Be part of the fastest growing marketplace.</p>
+              <p className="text-xs uppercase tracking-widest text-white/80 font-semibold">Live in {city}</p>
+              <p className="text-3xl font-bold text-white drop-shadow-sm">
+                <Typewriter key={stats.workers} text={`${stats.workers.toLocaleString("en-IN")} workers joined`} speed={50} />
+              </p>
+              <p className="text-lg text-white/80 font-medium">{stats.today} joined today. Be part of the fastest growing marketplace.</p>
             </div>
-        </div>
-        )}
+            <div className="w-full space-y-2">
+              {skills.map(([n, v]) => (
+                <div key={n} className="grid grid-cols-[1fr_2fr_auto] items-center gap-3 text-sm text-white/90">
+                  <span>{n}</span>
+                  <div className="h-1.5 rounded-full bg-black/20 overflow-hidden"><div className="h-full bg-white/90" style={{ width: `${(v / (skills[0]?.[1] || 1)) * 100}%` }} /></div>
+                  <span className="tabular-nums">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-sm text-white space-y-5">
+            <p className="text-xs uppercase tracking-widest text-white/80 font-semibold">How it works · {city}</p>
+            <p className="text-3xl font-bold leading-tight drop-shadow-sm">Event work, paid in full.</p>
+            <ol className="space-y-3 list-decimal pl-5 text-white/90">
+              <li><b>Client posts work</b> with date, pay, hours and the payment date.</li>
+              <li><b>Workers apply</b> using a slot. Rejected or cancelled? The slot comes back.</li>
+              <li><b>Check in with an OTP</b> at the venue, check out with a photo.</li>
+              <li><b>Both sides rate</b> each other. Reliable workers level up: Blue, Silver, Gold.</li>
+            </ol>
+            <p className="text-sm text-white/75">No agents, no commission. ₹550 through a contractor becomes ₹1,000+ paid straight to you.</p>
+          </div>
+        ))}
       </div>
     </div>
-  )
+  );
 }

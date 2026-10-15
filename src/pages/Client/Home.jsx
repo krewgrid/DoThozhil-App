@@ -1,4 +1,3 @@
-const Home = () => {
-  return null;
-};
+// The client home shows the krewgrid hero (rendered by Layout).
+const Home = () => null;
 export default Home;

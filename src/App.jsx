@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import React, { Suspense } from 'react';
 import ComingSoon from './pages/ComingSoon';
+import { MeProvider } from './lib/session';
+import { Toaster } from './components/kg/ui';
+import './kg.css';
 
 // ============================================================
 // COMING SOON MODE: Set to false to reveal the full website
-const COMING_SOON = false;
+const COMING_SOON = true;
 // ============================================================
 
 import Layout from './components/Layout';
@@ -22,27 +25,41 @@ import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/Signup';
 import CompleteProfile from './pages/Auth/CompleteProfile';
 
-// Lazy-loaded Client Pages
+// Client Pages
 const ClientHome = React.lazy(() => import('./pages/Client/Home'));
 const ClientDashboard = React.lazy(() => import('./pages/Client/Dashboard'));
 const PostWork = React.lazy(() => import('./pages/Client/PostWork'));
-const ClientReviews = React.lazy(() => import('./pages/Client/Reviews'));
-const ReportNoShow = React.lazy(() => import('./pages/Client/ReportNoShow'));
+const ClientWork = React.lazy(() => import('./pages/Client/WorkDetail'));
+const SavedWorkers = React.lazy(() => import('./pages/Client/Saved'));
+const ClientDisputes = React.lazy(() => import('./pages/Client/Disputes'));
+const ClientProfile = React.lazy(() => import('./pages/Client/Profile'));
 
-// Lazy-loaded Worker Pages
+// Worker Pages
 const WorkerHome = React.lazy(() => import('./pages/Worker/Home'));
 const WorkerDashboard = React.lazy(() => import('./pages/Worker/Dashboard'));
 const GetWork = React.lazy(() => import('./pages/Worker/GetWork'));
+const MyWorks = React.lazy(() => import('./pages/Worker/MyWorks'));
+const WorkerJob = React.lazy(() => import('./pages/Worker/Job'));
 const BuySlots = React.lazy(() => import('./pages/Worker/BuySlots'));
-const WorkerReviews = React.lazy(() => import('./pages/Worker/ReviewsAndDisputes'));
+const Levels = React.lazy(() => import('./pages/Worker/Levels'));
 const WorkerDisputes = React.lazy(() => import('./pages/Worker/Disputes'));
+const WorkerProfile = React.lazy(() => import('./pages/Worker/Profile'));
+const KycCallback = React.lazy(() => import('./pages/Worker/KycCallback'));
 
-// Lazy-loaded Shared Pages
+// Shared Pages
 const ContactUs = React.lazy(() => import('./pages/Shared/ContactUs'));
-const Profile = React.lazy(() => import('./pages/Shared/Profile'));
+const Chat = React.lazy(() => import('./pages/Shared/Chat'));
 
-// Lazy-loaded Admin Pages
-const ControlCentreDashboard = React.lazy(() => import('./pages/ControlCentre/Dashboard'));
+// Control Centre (admin)
+const CCDashboard = React.lazy(() => import('./pages/ControlCentre/Dashboard'));
+const CCWorks = React.lazy(() => import('./pages/ControlCentre/Works'));
+const CCWork = React.lazy(() => import('./pages/ControlCentre/WorkDetail'));
+const CCUsers = React.lazy(() => import('./pages/ControlCentre/Users'));
+const CCVerify = React.lazy(() => import('./pages/ControlCentre/Verify'));
+const CCDisputes = React.lazy(() => import('./pages/ControlCentre/Disputes'));
+const CCDocuments = React.lazy(() => import('./pages/ControlCentre/Documents'));
+const CCCategories = React.lazy(() => import('./pages/ControlCentre/Categories'));
+const CCSettings = React.lazy(() => import('./pages/ControlCentre/Settings'));
 
 function App() {
   if (COMING_SOON) {
@@ -56,49 +73,75 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/complete-profile" element={<CompleteProfile />} />
+    <MeProvider>
+      <BrowserRouter>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Redirect root to login (which forwards signed-in people to their home) */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
-          {/* Client Routes */}
-          <Route path="/client" element={<Layout role="client" />}>
-            <Route path="home" element={<ClientHome />} />
-            <Route path="dashboard" element={<ClientDashboard />} />
-            <Route path="post-work" element={<PostWork />} />
-            <Route path="reviews" element={<ClientReviews />} />
-            <Route path="report-no-show" element={<ReportNoShow />} />
-            <Route path="contact" element={<ContactUs />} />
-            <Route path="profile" element={<Profile role="client" />} />
-          </Route>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
 
-          {/* Worker Routes */}
-          <Route path="/worker" element={<Layout role="worker" />}>
-            <Route path="home" element={<WorkerHome />} />
-            <Route path="dashboard" element={<WorkerDashboard />} />
-            <Route path="get-work" element={<GetWork />} />
-            <Route path="buy-slots" element={<BuySlots />} />
-            <Route path="reviews" element={<WorkerReviews />} />
-            <Route path="disputes" element={<WorkerDisputes />} />
-            <Route path="contact" element={<ContactUs />} />
-            <Route path="profile" element={<Profile role="worker" />} />
-          </Route>
+            {/* Client Routes */}
+            <Route path="/client" element={<Layout role="client" />}>
+              <Route index element={<Navigate to="home" replace />} />
+              <Route path="home" element={<ClientHome />} />
+              <Route path="dashboard" element={<ClientDashboard />} />
+              <Route path="post-work" element={<PostWork />} />
+              <Route path="works/:id" element={<ClientWork />} />
+              <Route path="chat/:jobId" element={<Chat />} />
+              <Route path="saved" element={<SavedWorkers />} />
+              <Route path="disputes" element={<ClientDisputes />} />
+              <Route path="profile" element={<ClientProfile />} />
+              <Route path="contact" element={<ContactUs />} />
+              {/* Old links */}
+              <Route path="reviews" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="report-no-show" element={<Navigate to="/client/dashboard" replace />} />
+            </Route>
 
-          {/* Admin Routes */}
-          <Route path="/control-centre" element={<Layout role="admin" />}>
-            <Route path="dashboard" element={<ControlCentreDashboard />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+            {/* Worker Routes */}
+            <Route path="/worker" element={<Layout role="worker" />}>
+              <Route index element={<Navigate to="home" replace />} />
+              <Route path="home" element={<WorkerHome />} />
+              <Route path="dashboard" element={<WorkerDashboard />} />
+              <Route path="get-work" element={<GetWork />} />
+              <Route path="works" element={<MyWorks />} />
+              <Route path="job/:id" element={<WorkerJob />} />
+              <Route path="chat/:jobId" element={<Chat />} />
+              <Route path="buy-slots" element={<BuySlots />} />
+              <Route path="levels" element={<Levels />} />
+              <Route path="disputes" element={<WorkerDisputes />} />
+              <Route path="profile" element={<WorkerProfile />} />
+              <Route path="kyc-callback" element={<KycCallback />} />
+              <Route path="contact" element={<ContactUs />} />
+              <Route path="reviews" element={<Navigate to="/worker/works" replace />} />
+            </Route>
+
+            {/* Admin Routes */}
+            <Route path="/control-centre" element={<Layout role="admin" />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<CCDashboard />} />
+              <Route path="works" element={<CCWorks />} />
+              <Route path="works/:id" element={<CCWork />} />
+              <Route path="chat/:jobId" element={<Chat />} />
+              <Route path="users" element={<CCUsers />} />
+              <Route path="verify" element={<CCVerify />} />
+              <Route path="disputes" element={<CCDisputes />} />
+              <Route path="documents" element={<CCDocuments />} />
+              <Route path="categories" element={<CCCategories />} />
+              <Route path="settings" element={<CCSettings />} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Suspense>
+        <Toaster />
+      </BrowserRouter>
+    </MeProvider>
   );
 }
 
 export default App;
-

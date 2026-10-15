@@ -47,17 +47,20 @@ interface PrismaHeroProps {
   onPrimaryAction?: () => void;
   onSignOut?: () => void;
   onNavClick?: (item: string) => void;
+  navItems?: string[];
+  badges?: Record<string, number>;
+  buttonText?: string;
   children?: React.ReactNode;
 }
 
-export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOut, onNavClick, children }: PrismaHeroProps) => {
+export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOut, onNavClick, navItems: navProp, badges = {}, buttonText: buttonProp, children }: PrismaHeroProps) => {
   const isClient = role === "client";
 
-  const navItems = isClient
-    ? ["Home", "Dashboard", "Review Workers", "Report No Show", "Profile", "Contact Us", "Sign Out"]
-    : ["Home", "Dashboard", "Review Clients", "Buy Slots", "Profile", "Disputes", "Contact Us", "Sign Out"];
+  const navItems = navProp ?? (isClient
+    ? ["Home", "Dashboard", "Post a work", "Saved workers", "Disputes", "Profile", "Contact Us", "Sign Out"]
+    : ["Home", "Dashboard", "Find work", "My works", "Buy Slots", "Levels", "Disputes", "Profile", "Contact Us", "Sign Out"]);
 
-  const buttonText = isClient ? "Post a work" : "Get a work";
+  const buttonText = buttonProp ?? (isClient ? "Post a work" : "Find work");
 
   return (
     <section className="h-screen w-full p-2 md:p-4 bg-black">
@@ -104,6 +107,7 @@ export const PrismaHero = ({ role, activeItem, isHome, onPrimaryAction, onSignOu
                   }`}
                 >
                   {item}
+                  {badges[item] ? <span className="ml-1.5 rounded-full bg-[#1DBC60] px-1.5 text-[10px] font-bold text-black">{badges[item]}</span> : null}
                 </button>
               )
             })}

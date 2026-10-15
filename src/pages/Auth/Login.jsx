@@ -1,84 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { AuthUI } from '../../components/ui/auth-ui';
-import { supabase } from '../../lib/supabase';
+import { useMe, homeFor } from '../../lib/session';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
+const Login = ({ mode = 'signIn' }) => {
+  const me = useMe();
+  const [params] = useSearchParams();
+  // Supabase puts OAuth errors in the query string or the hash.
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const error = params.get('error_description') || hash.get('error_description') || (me.error ?? null);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (mounted) {
-          if (profile && profile.role) {
-            handleLogin(profile.role);
-          } else {
-            navigate('/complete-profile');
-          }
-        }
-      } else {
-        if (mounted) setChecking(false);
-      }
-    };
-    
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        if (mounted) setChecking(true);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (mounted) {
-          if (profile && profile.role) {
-            handleLogin(profile.role);
-          } else {
-            navigate('/complete-profile');
-          }
-        }
-      }
-    });
-
-    checkSession();
-    
-    return () => {
-      mounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const handleLogin = (role) => {
-    if (role === 'admin') {
-      navigate('/control-centre/dashboard');
-    } else if (role === 'client') {
-      navigate('/client/home');
-    } else {
-      navigate('/worker/home');
-    }
-  };
-
-  if (checking) {
+  if (me.loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#000', color: '#aaa' }}>
         Loading securely...
       </div>
     );
   }
+  if (me.user) return <Navigate to={homeFor(me)} replace />;
 
   return (
     <div style={{ backgroundColor: 'var(--background)' }}>
-      <AuthUI onLogin={handleLogin} />
+      <AuthUI initialMode={mode} error={error} />
     </div>
   );
 };
