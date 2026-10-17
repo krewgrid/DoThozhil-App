@@ -134,11 +134,15 @@ export default function Waitlist() {
           gap: 12,
         }}>
           <a href="./" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img
-              src="/krewgrid-logo.png"
-              alt="Krewgrid"
-              style={{ height: 56, width: 'auto', display: 'block', objectFit: 'contain' }}
-            />
+            <picture>
+              <source srcSet="/krewgrid-logo-white.png" media="(prefers-color-scheme: dark)" />
+              <img
+                src="/krewgrid-logo.png"
+                alt="Krewgrid"
+                className="krewgrid-nav-logo"
+                style={{ height: 52, width: 'auto', display: 'block', objectFit: 'contain' }}
+              />
+            </picture>
           </a>
           <div style={{
             display: 'inline-flex',
@@ -188,7 +192,7 @@ export default function Waitlist() {
               fontSize: 14,
               fontWeight: 600,
             }}>
-              {lang === 'en' ? 'For catering workers in Kochi' : 'കൊച്ചിയിലെ കാറ്ററിംഗ് തൊഴിലാളികൾക്ക്'}
+              {lang === 'en' ? 'For part-time workers in Kochi' : 'കൊച്ചിയിലെ പാർട്ട്-ടൈം തൊഴിലാളികൾക്ക്'}
             </p>
 
             <h1 style={{
@@ -199,16 +203,16 @@ export default function Waitlist() {
               fontWeight: 700,
             }}>
               {lang === 'en' ? (
-                <>Catering shifts in Kochi. <span style={{ color: '#3b3fd8' }}>Zero commission.</span></>
+                <>Part-time shifts in Kochi. <span style={{ color: '#3b3fd8' }}>Zero commission.</span></>
               ) : (
-                <>കൊച്ചിയിലെ കാറ്ററിംഗ് ജോലികൾ. <span style={{ color: '#3b3fd8' }}>കമ്മീഷൻ ഇല്ല.</span></>
+                <>കൊച്ചിയിലെ പാർട്ട്-ടൈം ജോലികൾ. <span style={{ color: '#3b3fd8' }}>കമ്മീഷൻ ഇല്ല.</span></>
               )}
             </h1>
 
             <p style={{ margin: '0 0 24px', color: '#5d6175', fontSize: 18, maxWidth: '34em' }}>
               {lang === 'en'
-                ? "Find work with verified caterers, check in from your phone, and keep every rupee you earn. Join the waitlist and we'll email you the day we launch."
-                : 'പരിശോധിച്ച കാറ്ററിംഗ് ബിസിനസുകളിൽ ജോലി കണ്ടെത്തൂ, ഫോണിൽ നിന്ന് ചെക്ക്-ഇൻ ചെയ്യൂ, നിങ്ങൾ സമ്പാദിക്കുന്ന മുഴുവൻ തുകയും നിങ്ങൾക്ക്. വെയിറ്റ്‌ലിസ്റ്റിൽ ചേരൂ, ലോഞ്ച് ദിവസം ഞങ്ങൾ ഇമെയിൽ അയയ്ക്കാം.'}
+                ? "Find part-time work with verified businesses, check in from your phone, and keep every rupee you earn. Join the waitlist and we'll email you the day we launch."
+                : 'പരിശോധിച്ച ബിസിനസുകളിൽ പാർട്ട്-ടൈം ജോലി കണ്ടെത്തൂ, ഫോണിൽ നിന്ന് ചെക്ക്-ഇൻ ചെയ്യൂ, നിങ്ങൾ സമ്പാദിക്കുന്ന മുഴുവൻ തുകയും നിങ്ങൾക്ക്. വെയിറ്റ്‌ലിസ്റ്റിൽ ചേരൂ, ലോഞ്ച് ദിവസം ഞങ്ങൾ ഇമെയിൽ അയയ്ക്കാം.'}
             </p>
 
             {/* Perks */}
