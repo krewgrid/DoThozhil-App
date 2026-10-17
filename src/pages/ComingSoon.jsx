@@ -134,15 +134,11 @@ export default function Waitlist() {
           gap: 12,
         }}>
           <a href="./" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-            <picture>
-              <source srcSet="/krewgrid-logo-white.png" media="(prefers-color-scheme: dark)" />
-              <img
-                src="/krewgrid-logo.png"
-                alt="Krewgrid"
-                className="krewgrid-nav-logo"
-                style={{ height: 44, width: 'auto', display: 'block', objectFit: 'contain' }}
-              />
-            </picture>
+            <img
+              src="/krewgrid-logo.png"
+              alt="Krewgrid"
+              style={{ height: 56, width: 'auto', display: 'block', objectFit: 'contain' }}
+            />
           </a>
           <div style={{
             display: 'inline-flex',
