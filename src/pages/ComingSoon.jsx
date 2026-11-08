@@ -44,10 +44,22 @@ export default function Waitlist() {
   useEffect(() => {
     async function fetchCount() {
       try {
-        const { count, error } = await supabase
-          .from('waitlist')
-          .select('*', { count: 'exact', head: true });
-        if (!error && count !== null) setWaitlistCount(count);
+        const [latestRes, countRes] = await Promise.all([
+          supabase
+            .from('waitlist')
+            .select('id')
+            .order('id', { ascending: false })
+            .limit(1),
+          supabase
+            .from('waitlist')
+            .select('*', { count: 'exact', head: true })
+        ]);
+
+        const maxId = latestRes.data?.[0]?.id ? Number(latestRes.data[0].id) : 0;
+        const total = (countRes.count !== null && countRes.count !== undefined) ? Number(countRes.count) : 0;
+        const currentCount = Math.max(maxId, total);
+
+        if (currentCount > 0) setWaitlistCount(currentCount);
       } catch (e) {
         console.error('Failed to fetch waitlist count:', e);
       }
@@ -73,7 +85,7 @@ export default function Waitlist() {
     setErrors({});
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('waitlist')
         .insert({
           name: name.trim(),
@@ -82,7 +94,9 @@ export default function Waitlist() {
           consent_text: lang === 'en'
             ? 'Email me when Krewgrid launches in Kochi. I can unsubscribe anytime.'
             : 'കൊച്ചിയിൽ Krewgrid ആരംഭിക്കുമ്പോൾ എനിക്ക് ഇമെയിൽ അയയ്ക്കുക. എപ്പോൾ വേണമെങ്കിലും അൺസബ്സ്ക്രൈബ് ചെയ്യാം.'
-        });
+        })
+        .select('id')
+        .maybeSingle();
 
       if (error) {
         console.error("Waitlist submission error:", error);
@@ -96,7 +110,11 @@ export default function Waitlist() {
       } else {
         setDoneEmail(email.trim().toLowerCase());
         setDone(true);
-        setWaitlistCount(prev => prev + 1);
+        if (data?.id) {
+          setWaitlistCount(prev => Math.max(prev + 1, Number(data.id)));
+        } else {
+          setWaitlistCount(prev => prev + 1);
+        }
       }
     } catch (err) {
       console.error("Waitlist exception:", err);
